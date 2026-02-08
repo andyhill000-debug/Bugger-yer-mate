@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00d4aa">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="BYM Scorer">
+    <link rel="manifest" href="manifest.json">
+    <title>Bugger Yer Mate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #00d4aa 0%, #00a88a 100%);
+            min-height: 100vh;
+            padding: 10px;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fafafa;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            color: #1a1a1a;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 212, 170, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #1a1a1a;
+        }
+        
+        .stats-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .stats-icon:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .stats-icon:active {
+            transform: scale(0.95);
+        }
+        
+        .stats-icon span {
+            font-size: 20px;
+        }
+        
+        .header-icons {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .setup-screen, .game-screen {
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"] {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 17px;
+            transition: border-color 0.3s;
+            min-height: 52px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus {
+            outline: none;
+            border-color: #00d4aa;
+        }
+
+        .player-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00d4aa 0%, #00a88a 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 56px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 212, 170, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #1a1a1a;
+            margin-top: 12px;
+        }
+
+        .round-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .round-info h2 {
+            color: #00d4aa;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .round-info p {
+            color: #495057;
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+        
+        .round-info .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .round-info .info-item {
+            background: white;
+            padding: 10px 8px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .round-info .info-item strong {
+            display: block;
+            color: #00d4aa;
+            font-size: 16px;
+            margin-top: 2px;
+            font-weight: 700;
+        }
+        
+        .round-info .info-item .label {
+            font-size: 11px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .scoring-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .player-score-input {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .player-score-input:hover {
+            border-color: #00d4aa;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+        
+        .player-score-input.dealer {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff 100%);
+            border-color: #ffc107;
+        }
+
+        .player-score-input h3 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: center;
+        }
+        
+        .player-score-input h3 .player-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        
+        .player-score-input h3 .badge {
+            font-size: 9px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            align-self: center;
+            letter-spacing: 0.3px;
+        }
+        
+        .player-score-input h3 .badge-dealer {
+            background: #ffc107;
+            color: #856404;
+        }
+        
+        .player-score-input h3 .badge-position {
+            background: #00d4aa;
+            color: white;
+        }
+
+        .player-score-input h3 small {
+            font-size: 12px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .score-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .score-inputs > div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .score-inputs input[type="number"] {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+            font-weight: 700;
+            transition: all 0.2s;
+            background: white;
+            min-height: 56px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .score-inputs input[type="number"]:focus {
+            outline: none;
+            border-color: #00d4aa;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .score-inputs input[type="number"]:valid {
+            border-color: #28a745;
+        }
+
+        .score-inputs label {
+            font-size: 10px;
+            color: #666;
+            margin-bottom: 4px;
+            display: block;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .scoreboard {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 8px 6px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #00d4aa;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .total-row {
+            font-weight: 700;
+            background: #e9ecef !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .warning-box.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .warning-box .icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        
+        .warning-box .message {
+            color: #856404;
+            font-weight: 600;
+            font-size: 13px;
+            flex: 1;
+            line-height: 1.4;
+        }
+        
+        .warning-box.error .message {
+            color: #721c24;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: normal;
+        }
+        
+        .radio-group label.vertical {
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .radio-group input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            min-height: auto;
+            -webkit-appearance: radio;
+            appearance: radio;
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        /* Mobile Optimizations */
+        
+        /* Very small phones - force 2 column grid */
+        @media (max-width: 360px) {
+            .scoring-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Small phones - optimize header and spacing */
+        @media (max-width: 375px) {
+            .header svg {
+                height: 40px !important;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .header p {
+                font-size: 14px !important;
+            }
+        }
+        
+        /* Compact info grid on small screens */
+        @media (max-width: 400px) {
+            .info-grid {
+                gap: 5px !important;
+            }
+            .round-info {
+                padding: 15px;
+            }
+            
+            /* Compact statistics table */
+            #statsModal table {
+                font-size: 12px;
+            }
+            #statsModal th,
+            #statsModal td {
+                padding: 6px 4px !important;
+            }
+        }
+        
+        /* Landscape mode optimization */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .header {
+                padding: 10px;
+            }
+            .header svg {
+                height: 35px !important;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            .round-info {
+                padding: 12px;
+            }
+            .player-score-input {
+                padding: 8px;
+            }
+        }
+        
+        /* Ensure icons stay visible on scroll */
+        @media (max-width: 768px) {
+            .header-icons {
+                position: fixed;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header" style="position: relative;">
+            <div class="header-icons">
+                <div class="stats-icon" onclick="importStatisticsFromSetup()" title="Import Statistics">
+                    <span>📤</span>
+                </div>
+                <div class="stats-icon" onclick="showStatistics()" title="View Statistics">
+                    <span>📈</span>
+                </div>
+            </div>
+            
+            <!-- Hillfred Logo - responsive positioning -->
+            <div style="display: flex; justify-content: center; margin-bottom: 10px; padding-top: 5px;">
+                <svg viewBox="0 0 400 120" style="height: 50px; width: auto; max-width: 90%;">
+                  <!-- Geometric Icon -->
+                  <g transform="translate(50, 60)">
+                    <g transform="rotate(45 28 28)">
+                      <rect x="0" y="0" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      <rect x="20" y="0" width="16" height="16" fill="#00d4aa" rx="1"/>
+                      <rect x="40" y="0" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      
+                      <rect x="0" y="20" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      <rect x="20" y="20" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      <rect x="40" y="20" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      
+                      <rect x="0" y="40" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      <rect x="20" y="40" width="16" height="16" fill="#1a1a1a" rx="1"/>
+                      <rect x="40" y="40" width="16" height="16" fill="#00d4aa" rx="1"/>
+                    </g>
+                  </g>
+                  
+                  <!-- Wordmark -->
+                  <text x="130" y="70" font-family="Playfair Display, Georgia, serif" font-size="48" font-weight="700" fill="#1a1a1a" letter-spacing="-0.3">Hillfred</text>
+                  
+                  <!-- Underline accent -->
+                  <rect x="130" y="76" width="80" height="1" fill="#00d4aa"/>
+                </svg>
+            </div>
+            
+            <h1 style="margin-bottom: 2px; margin-top: 0;">
+                <span style="color: #dc3545;">♥</span>
+                <span style="color: #000000;">♣</span>
+                Bugger Yer Mate
+                <span style="color: #dc3545;">♦</span>
+                <span style="color: #000000;">♠</span>
+            </h1>
+            <p style="font-size: 16px; margin-top: 0; margin-bottom: 10px; font-weight: bold; color: #1a1a1a; text-align: center;">(or your mates mate)</p>
+            <p style="font-size: 12px; margin-top: 5px; color: #1a1a1a;">Scoring: Make bid = 10 + tricks | Miss bid = 1 per trick</p>
+        </div>
+
+        <!-- Setup Screen -->
+        <div id="setupScreen" class="setup-screen">
+            <div class="form-group">
+                <label for="numPlayers">Number of Players (3-6):</label>
+                <input type="number" id="numPlayers" min="3" max="6" inputmode="numeric" pattern="[0-9]*">
+            </div>
+
+            <div class="form-group">
+                <label>Starting Number of Cards:</label>
+                <input type="number" id="startCards" min="1" max="13" inputmode="numeric" pattern="[0-9]*">
+            </div>
+
+            <div class="form-group">
+                <label>Round Type:</label>
+                <div class="radio-group">
+                    <label class="vertical">
+                        <input type="radio" name="roundType" value="down" checked>
+                        <span>Half Way Pussy!</span>
+                    </label>
+                    <label class="vertical">
+                        <input type="radio" name="roundType" value="updown">
+                        <span>All The Way Baby!</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Player Names:</label>
+                <div id="playerNamesInputs" class="player-inputs"></div>
+            </div>
+
+            <button class="btn" onclick="startGame()">Start Game</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="game-screen hidden">
+            <div class="round-info">
+                <h2>Round <span id="currentRound">1</span></h2>
+                <div class="info-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                    <div class="info-item" style="text-align: center;">
+                        <div class="label">Cards to Deal</div>
+                        <strong style="font-size: 24px;"><span id="currentCards">7</span></strong>
+                    </div>
+                </div>
+                <div class="info-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="info-item">
+                        <div class="label">Trump Suit</div>
+                        <strong><span id="trumpSuit">♥ Hearts</span></strong>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Dealer</div>
+                        <strong><span id="dealerName">Player 1</span></strong>
+                    </div>
+                </div>
+                <div class="info-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <div class="info-item">
+                        <div class="label">Total Bids</div>
+                        <strong><span id="totalBids">0</span></strong>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">Won Tricks</div>
+                        <strong><span id="totalTricks">0</span></strong>
+                    </div>
+                </div>
+                <div id="bidWarning" style="display: none;" class="warning-box error">
+                    <span class="icon">⚠️</span>
+                    <span class="message">Total bids cannot equal number of cards!</span>
+                </div>
+                <div id="tricksWarning" style="display: none;" class="warning-box error">
+                    <span class="icon">⚠️</span>
+                    <span class="message">Total tricks must equal number of cards!</span>
+                </div>
+                <div id="consecutiveBidWarning" style="display: none;" class="warning-box">
+                    <span class="icon">⚠️</span>
+                    <span class="message" id="consecutiveBidMessage"></span>
+                </div>
+            </div>
+
+            <div id="scoringInputs" class="scoring-grid"></div>
+
+            <button class="btn" onclick="submitRound()">✓ Submit Round</button>
+            <button class="btn btn-secondary" onclick="showScoreboard()">📊 View Scoreboard</button>
+            <button class="btn btn-secondary" onclick="showStatistics()">📈 View Statistics</button>
+            <button class="btn btn-secondary" onclick="resetGame()">🔄 New Game</button>
+
+            <div id="scoreboardSection" class="hidden">
+                <h2 style="margin: 20px 0 10px 0; color: #333;">Scoreboard</h2>
+                <div class="scoreboard">
+                    <table id="scoreboardTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Suppress script errors that are causing console to open
+        window.onerror = function(message, source, lineno, colno, error) {
+            // Silently catch errors to prevent console from opening
+            return true; // Prevents default error handling
+        };
+        
+        let gameState = {
+            players: [],
+            rounds: [],
+            currentRound: 0,
+            roundStructure: [],
+            scores: [],
+            trumpSuits: [
+                { name: 'Hearts', icon: '♥', color: '#dc3545' },
+                { name: 'Clubs', icon: '♣', color: '#000000' },
+                { name: 'Diamonds', icon: '♦', color: '#dc3545' },
+                { name: 'Spades', icon: '♠', color: '#000000' },
+                { name: 'No Trumps', icon: 'NT', color: '#00d4aa' }
+            ],
+            dealerIndex: 0
+        };
+
+        // Statistics management
+        function showErrorDialog(title, message) {
+            const errorHTML = `
+                <div id="errorDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <h3 style="margin: 0 0 15px 0; color: #dc3545; font-size: 20px;">⚠️ ${title}</h3>
+                        <p style="margin: 0 0 20px 0; color: #666; font-size: 16px; white-space: pre-line;">${message}</p>
+                        <button id="errorOk" style="width: 100%; padding: 14px; background: #00d4aa; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">OK</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', errorHTML);
+            document.getElementById('errorOk').addEventListener('click', function() {
+                document.getElementById('errorDialog').remove();
+            });
+        }
+
+        function saveGameState() {
+            const gameData = {
+                players: gameState.players,
+                rounds: gameState.rounds,
+                currentRound: gameState.currentRound,
+                roundStructure: gameState.roundStructure,
+                scores: gameState.scores,
+                dealerIndex: gameState.dealerIndex,
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem('buggerYerMateGameInProgress', JSON.stringify(gameData));
+        }
+
+        function loadGameState() {
+            const saved = localStorage.getItem('buggerYerMateGameInProgress');
+            if (!saved) return null;
+            
+            try {
+                const gameData = JSON.parse(saved);
+                
+                // Validate that the game is actually in progress and not complete
+                if (!gameData.players || gameData.players.length === 0) return null;
+                if (!gameData.roundStructure || gameData.roundStructure.length === 0) return null;
+                
+                // If current round >= total rounds, game is complete, don't restore
+                if (gameData.currentRound >= gameData.roundStructure.length) {
+                    clearSavedGame(); // Clear completed game
+                    return null;
+                }
+                
+                return gameData;
+            } catch (e) {
+                clearSavedGame(); // Clear corrupted data
+                return null;
+            }
+        }
+
+        function clearSavedGame() {
+            localStorage.removeItem('buggerYerMateGameInProgress');
+        }
+        
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            const days = Math.floor(hours / 24);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+        
+        function restoreGame(savedGame) {
+            // Restore game state
+            gameState.players = savedGame.players;
+            gameState.rounds = savedGame.rounds;
+            gameState.currentRound = savedGame.currentRound;
+            gameState.roundStructure = savedGame.roundStructure;
+            gameState.scores = savedGame.scores;
+            gameState.dealerIndex = savedGame.dealerIndex;
+            
+            // Hide setup, show game screen
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            document.getElementById('scoreboardSection').classList.remove('hidden');
+            
+            // Update scoreboard with existing rounds
+            updateScoreboard();
+            
+            // Setup the current round
+            setupRound();
+        }
+        
+        function loadStatistics() {
+            const stats = localStorage.getItem('nominationWhistStats');
+            if (!stats) return {};
+            
+            const parsedStats = JSON.parse(stats);
+            
+            // Ensure all player stats have totalRounds (for backward compatibility)
+            Object.keys(parsedStats).forEach(playerName => {
+                if (!parsedStats[playerName].totalRounds) {
+                    parsedStats[playerName].totalRounds = 0;
+                    // Calculate from game history if available
+                    if (parsedStats[playerName].gameHistory) {
+                        parsedStats[playerName].totalRounds = parsedStats[playerName].gameHistory.reduce(
+                            (total, game) => total + (game.rounds || 0), 
+                            0
+                        );
+                    }
+                }
+            });
+            
+            return parsedStats;
+        }
+
+        function saveStatistics(stats) {
+            localStorage.setItem('nominationWhistStats', JSON.stringify(stats));
+        }
+
+        function recordGameResults() {
+            const stats = loadStatistics();
+            const gameDate = new Date().toISOString();
+            
+            // Determine winner(s) with tiebreaker logic
+            const maxScore = Math.max(...gameState.scores);
+            const tiedPlayerIndices = gameState.scores.map((score, idx) => score === maxScore ? idx : -1).filter(idx => idx !== -1);
+            
+            let winnerIndices = tiedPlayerIndices;
+            
+            // If there's a tie, apply tiebreaker rules
+            if (tiedPlayerIndices.length > 1) {
+                // Calculate successful bids for tied players
+                const playerStats = tiedPlayerIndices.map(playerIdx => {
+                    let successfulBids = 0;
+                    let totalBids = 0;
+                    
+                    gameState.rounds.forEach(round => {
+                        const bid = round.bids[playerIdx];
+                        const tricks = round.tricks[playerIdx];
+                        totalBids += bid;
+                        if (bid === tricks) {
+                            successfulBids++;
+                        }
+                    });
+                    
+                    return {
+                        playerIdx: playerIdx,
+                        successfulBids: successfulBids,
+                        totalBids: totalBids
+                    };
+                });
+                
+                // First tiebreaker: most successful bids
+                const maxSuccessfulBids = Math.max(...playerStats.map(p => p.successfulBids));
+                let remainingPlayers = playerStats.filter(p => p.successfulBids === maxSuccessfulBids);
+                
+                // Second tiebreaker: highest total bids (if still tied on successful bids)
+                if (remainingPlayers.length > 1) {
+                    const maxTotalBids = Math.max(...remainingPlayers.map(p => p.totalBids));
+                    remainingPlayers = remainingPlayers.filter(p => p.totalBids === maxTotalBids);
+                }
+                
+                winnerIndices = remainingPlayers.map(p => p.playerIdx);
+            }
+            
+            // Update player statistics
+            gameState.players.forEach((playerName, idx) => {
+                const playerScore = gameState.scores[idx];
+                
+                if (!stats[playerName]) {
+                    stats[playerName] = {
+                        gamesPlayed: 0,
+                        wins: 0,
+                        totalScore: 0,
+                        totalRounds: 0,
+                        highestScore: 0,
+                        gameHistory: []
+                    };
+                }
+                
+                stats[playerName].gamesPlayed++;
+                stats[playerName].totalScore += playerScore;
+                stats[playerName].totalRounds += gameState.rounds.length;
+                if (playerScore > stats[playerName].highestScore) {
+                    stats[playerName].highestScore = playerScore;
+                }
+                
+                // Check if this player won (using tiebreaker logic)
+                const isWinner = winnerIndices.includes(idx);
+                if (isWinner) {
+                    stats[playerName].wins++;
+                }
+                
+                // Record this game in history
+                stats[playerName].gameHistory.push({
+                    date: gameDate,
+                    score: playerScore,
+                    won: isWinner,
+                    players: gameState.players.length,
+                    rounds: gameState.rounds.length
+                });
+            });
+            
+            saveStatistics(stats);
+        }
+
+        function showStatistics() {
+            const stats = loadStatistics();
+            const playerNames = Object.keys(stats).sort();
+            
+            if (playerNames.length === 0) {
+                showErrorDialog('No Statistics', 'No statistics available yet. Complete a game to start tracking statistics!');
+                return;
+            }
+            
+            let html = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;" id="statsModal">
+                    <div style="background: white; padding: 20px; border-radius: 12px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto;">
+                        <h2 style="margin-bottom: 20px; color: #00d4aa; text-align: center;">Player Statistics</h2>
+                        <div style="margin-bottom: 20px; overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr style="background: #00d4aa; color: white;">
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #e0e0e0; font-size: 12px;">Player</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 12px;">Games</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 12px;">Wins</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 12px;">Win %</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 12px;">Avg/Game</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 12px;">Avg/Round</th>
+                                    <th style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 12px;">High</th>
+                                </tr>
+            `;
+            
+            playerNames.forEach((playerName, idx) => {
+                const playerStats = stats[playerName];
+                const avgScorePerGame = (playerStats.totalScore / playerStats.gamesPlayed).toFixed(1);
+                const avgScorePerRound = playerStats.totalRounds > 0 
+                    ? (playerStats.totalScore / playerStats.totalRounds).toFixed(1) 
+                    : '0.0';
+                const winPercentage = ((playerStats.wins / playerStats.gamesPlayed) * 100).toFixed(1);
+                const bgColor = idx % 2 === 0 ? '#f8f9fa' : 'white';
+                
+                html += `
+                    <tr style="background: ${bgColor};">
+                        <td style="padding: 10px; border: 1px solid #e0e0e0; font-size: 13px;">${playerName}</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px;">${playerStats.gamesPlayed}</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px;">${playerStats.wins}</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px;">${winPercentage}%</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px;">${avgScorePerGame}</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; font-weight: 600; color: #00d4aa;">${avgScorePerRound}</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px;">${playerStats.highestScore}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                            </table>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="exportStatsBtn" style="flex: 1; padding: 12px; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; pointer-events: auto;">📥 Export Stats</button>
+                            <button id="importStatsBtn" style="flex: 1; padding: 12px; background: #17a2b8; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; pointer-events: auto;">📤 Import Stats</button>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button id="closeStatsBtn" style="flex: 1; padding: 12px; background: #00d4aa; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; pointer-events: auto;">Close</button>
+                            <button id="clearStatsBtn" style="flex: 1; padding: 12px; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; pointer-events: auto;">Clear All Stats</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', html);
+            
+            // Add click to background to close
+            const modal = document.getElementById('statsModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target.id === 'statsModal') {
+                        closeStatsModal();
+                    }
+                });
+            }
+            
+            // Add event listeners after the modal is inserted
+            const closeBtn = document.getElementById('closeStatsBtn');
+            const clearBtn = document.getElementById('clearStatsBtn');
+            const exportBtn = document.getElementById('exportStatsBtn');
+            const importBtn = document.getElementById('importStatsBtn');
+            
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeStatsModal();
+                });
+            }
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    clearAllStatistics();
+                });
+            }
+            
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    exportStatistics();
+                });
+            }
+            
+            if (importBtn) {
+                importBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    importStatistics();
+                });
+            }
+        }
+
+        function exportStatistics() {
+            const stats = localStorage.getItem('nominationWhistStats');
+            
+            if (!stats) {
+                showErrorDialog('No Statistics', 'No statistics available to export. Play some games first!');
+                return;
+            }
+            
+            // Create a data object with timestamp
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                statistics: JSON.parse(stats)
+            };
+            
+            // Convert to JSON string
+            const dataStr = JSON.stringify(exportData, null, 2);
+            
+            // Create blob and download
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const fileName = `bugger-yer-mate-stats-${new Date().toISOString().split('T')[0]}.json`;
+            
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // Show success message
+            const successHTML = `
+                <div id="exportSuccessDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center;">
+                        <h3 style="margin: 0 0 15px 0; color: #28a745; font-size: 20px;">✓ Statistics Exported!</h3>
+                        <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">Your statistics have been downloaded as:<br><strong>${fileName}</strong></p>
+                        <button id="exportSuccessOk" style="padding: 14px 30px; background: #00d4aa; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', successHTML);
+            document.getElementById('exportSuccessOk').addEventListener('click', function() {
+                document.getElementById('exportSuccessDialog').remove();
+            });
+        }
+        
+        function importStatistics() {
+            // Create file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    try {
+                        const importData = JSON.parse(event.target.result);
+                        
+                        // Validate the data structure
+                        if (!importData.statistics) {
+                            showErrorDialog('Invalid File', 'This file does not contain valid statistics data.');
+                            return;
+                        }
+                        
+                        // Show confirmation dialog
+                        const confirmHTML = `
+                            <div id="importConfirmDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                                <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                                    <h3 style="margin: 0 0 15px 0; color: #17a2b8; font-size: 20px;">Import Statistics?</h3>
+                                    <p style="margin: 0 0 10px 0; color: #666; font-size: 16px;">This will replace your current statistics with the imported data.</p>
+                                    <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;"><strong>Export Date:</strong> ${new Date(importData.exportDate).toLocaleDateString()}</p>
+                                    <div style="display: flex; gap: 10px;">
+                                        <button id="importCancel" style="flex: 1; padding: 14px; background: #6c757d; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Cancel</button>
+                                        <button id="importConfirm" style="flex: 1; padding: 14px; background: #17a2b8; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Import</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        document.body.insertAdjacentHTML('beforeend', confirmHTML);
+                        
+                        document.getElementById('importCancel').addEventListener('click', function() {
+                            document.getElementById('importConfirmDialog').remove();
+                        });
+                        
+                        document.getElementById('importConfirm').addEventListener('click', function() {
+                            // Save the imported statistics
+                            localStorage.setItem('nominationWhistStats', JSON.stringify(importData.statistics));
+                            
+                            document.getElementById('importConfirmDialog').remove();
+                            
+                            // Show success message
+                            const successHTML = `
+                                <div id="importSuccessDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 3000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                                    <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center;">
+                                        <h3 style="margin: 0 0 15px 0; color: #28a745; font-size: 20px;">✓ Statistics Imported!</h3>
+                                        <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">Your statistics have been successfully imported.</p>
+                                        <button id="importSuccessOk" style="padding: 14px 30px; background: #00d4aa; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">OK</button>
+                                    </div>
+                                </div>
+                            `;
+                            document.body.insertAdjacentHTML('beforeend', successHTML);
+                            document.getElementById('importSuccessOk').addEventListener('click', function() {
+                                document.getElementById('importSuccessDialog').remove();
+                                // Refresh the stats display if modal is open
+                                const statsModal = document.getElementById('statsModal');
+                                if (statsModal) {
+                                    closeStatsModal();
+                                    showStatistics();
+                                }
+                            });
+                        });
+                        
+                    } catch (error) {
+                        showErrorDialog('Import Error', 'Failed to import statistics. The file may be corrupted or in the wrong format.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        function importStatisticsFromSetup() {
+            // Just call the main import function - it works from anywhere
+            importStatistics();
+        }
+        
+        function clearAllStatistics() {
+            // Create custom confirmation dialog
+            const confirmHTML = `
+                <div id="confirmDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 20px;">Clear All Statistics?</h3>
+                        <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">Are you sure you want to clear all statistics? This cannot be undone.</p>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="confirmNo" style="flex: 1; padding: 14px; background: #6c757d; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Cancel</button>
+                            <button id="confirmYes" style="flex: 1; padding: 14px; background: #dc3545; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Clear Stats</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', confirmHTML);
+            
+            document.getElementById('confirmNo').addEventListener('click', function() {
+                document.getElementById('confirmDialog').remove();
+            });
+            
+            document.getElementById('confirmYes').addEventListener('click', function() {
+                document.getElementById('confirmDialog').remove();
+                
+                localStorage.removeItem('nominationWhistStats');
+                
+                const check = localStorage.getItem('nominationWhistStats');
+                
+                if (check === null) {
+                    closeStatsModal();
+                    
+                    // Show success message
+                    const successHTML = `
+                        <div id="successDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                            <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center;">
+                                <h3 style="margin: 0 0 15px 0; color: #28a745; font-size: 20px;">✓ Success</h3>
+                                <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">Statistics cleared successfully!</p>
+                                <button id="successOk" style="padding: 14px 30px; background: #00d4aa; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">OK</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertAdjacentHTML('beforeend', successHTML);
+                    document.getElementById('successOk').addEventListener('click', function() {
+                        document.getElementById('successDialog').remove();
+                    });
+                }
+            });
+        }
+
+        function closeStatsModal() {
+            const modal = document.getElementById('statsModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for auto-saved game
+            try {
+                const savedGame = loadGameState();
+                if (savedGame && savedGame.players && savedGame.players.length > 0) {
+                    // Create restore game dialog
+                    let timeAgo = 'recently';
+                    try {
+                        const savedDate = new Date(savedGame.savedAt);
+                        if (!isNaN(savedDate.getTime())) {
+                            timeAgo = getTimeAgo(savedDate);
+                        }
+                    } catch (e) {
+                        // If date parsing fails, use default
+                    }
+                    
+                    const restoreHTML = `
+                        <div id="restoreGameDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                            <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                                <h3 style="margin: 0 0 15px 0; color: #00d4aa; font-size: 20px;">💾 Game Found!</h3>
+                                <p style="margin: 0 0 10px 0; color: #666; font-size: 16px;">A saved game was found from ${timeAgo}.</p>
+                                <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">
+                                    <strong>Players:</strong> ${savedGame.players.join(', ')}<br>
+                                    <strong>Round:</strong> ${savedGame.currentRound + 1} of ${savedGame.roundStructure.length}
+                                </p>
+                                <div style="display: flex; gap: 10px;">
+                                    <button id="restoreNo" style="flex: 1; padding: 14px; background: #6c757d; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Start Fresh</button>
+                                    <button id="restoreYes" style="flex: 1; padding: 14px; background: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Continue Game</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', restoreHTML);
+                    
+                    document.getElementById('restoreNo').addEventListener('click', function() {
+                        clearSavedGame();
+                        document.getElementById('restoreGameDialog').remove();
+                    });
+                    
+                    document.getElementById('restoreYes').addEventListener('click', function() {
+                        document.getElementById('restoreGameDialog').remove();
+                        restoreGame(savedGame);
+                    });
+                }
+            } catch (e) {
+                // Silently handle any errors in restore process
+                clearSavedGame();
+            }
+            
+            // Initialize player name inputs
+            const numPlayersInput = document.getElementById('numPlayers');
+            if (numPlayersInput) {
+                numPlayersInput.addEventListener('input', updatePlayerInputs);
+                updatePlayerInputs();
+            }
+        });
+
+        function updatePlayerInputs() {
+            const numInput = document.getElementById('numPlayers').value;
+            const num = numInput ? parseInt(numInput) : 0;
+            const container = document.getElementById('playerNamesInputs');
+            container.innerHTML = '';
+            
+            if (num >= 3 && num <= 6) {
+                for (let i = 0; i < num; i++) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.display = 'flex';
+                    wrapper.style.alignItems = 'center';
+                    wrapper.style.gap = '10px';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = `Player ${i + 1} name`;
+                    input.id = `playerName${i}`;
+                    input.style.flex = '1';
+                    
+                    const checkboxWrapper = document.createElement('label');
+                    checkboxWrapper.style.display = 'flex';
+                    checkboxWrapper.style.flexDirection = 'column';
+                    checkboxWrapper.style.alignItems = 'center';
+                    checkboxWrapper.style.gap = '5px';
+                    checkboxWrapper.style.cursor = 'pointer';
+                    checkboxWrapper.style.minWidth = '80px';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'radio';
+                    checkbox.name = 'startingDealer';
+                    checkbox.id = `dealer${i}`;
+                    checkbox.value = i;
+                    checkbox.style.width = '20px';
+                    checkbox.style.height = '20px';
+                    checkbox.style.minHeight = 'auto';
+                    checkbox.style.webkitAppearance = 'radio';
+                    checkbox.style.appearance = 'radio';
+                    checkbox.style.margin = '0';
+                    checkbox.style.cursor = 'pointer';
+                    if (i === 0) checkbox.checked = true; // First player is dealer by default
+                    
+                    const labelText = document.createElement('span');
+                    labelText.textContent = 'Starting Dealer';
+                    labelText.style.fontSize = '12px';
+                    labelText.style.textAlign = 'center';
+                    labelText.style.lineHeight = '1.2';
+                    
+                    checkboxWrapper.appendChild(checkbox);
+                    checkboxWrapper.appendChild(labelText);
+                    
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(checkboxWrapper);
+                    container.appendChild(wrapper);
+                }
+            }
+        }
+
+        function startGame() {
+            try {
+                const numPlayersEl = document.getElementById('numPlayers');
+                const startCardsEl = document.getElementById('startCards');
+                const roundTypeEl = document.querySelector('input[name="roundType"]:checked');
+                
+                if (!numPlayersEl || !startCardsEl || !roundTypeEl) {
+                    showErrorDialog('Error', 'Please fill in all fields');
+                    return;
+                }
+                
+                const numPlayers = parseInt(numPlayersEl.value);
+                const startCards = parseInt(startCardsEl.value);
+                const roundType = roundTypeEl.value;
+
+                if (isNaN(numPlayers) || numPlayers < 3 || numPlayers > 6) {
+                    showErrorDialog('Invalid Players', 'Please enter between 3 and 6 players');
+                    return;
+                }
+
+                if (isNaN(startCards) || startCards < 1 || startCards > 13) {
+                    showErrorDialog('Invalid Cards', 'Please enter a valid starting number of cards (1-13)');
+                    return;
+                }
+
+                // Get player names
+                gameState.players = [];
+                for (let i = 0; i < numPlayers; i++) {
+                    const nameEl = document.getElementById(`playerName${i}`);
+                    const name = nameEl ? (nameEl.value.trim() || `Player ${i + 1}`) : `Player ${i + 1}`;
+                    gameState.players.push(name);
+                }
+                
+                // Get starting dealer selection
+                const selectedDealer = document.querySelector('input[name="startingDealer"]:checked');
+                gameState.dealerIndex = selectedDealer ? parseInt(selectedDealer.value) : 0;
+
+                // Create round structure
+                gameState.roundStructure = [];
+                for (let i = startCards; i >= 1; i--) {
+                    gameState.roundStructure.push(i);
+                }
+                if (roundType === 'updown') {
+                    for (let i = 2; i <= startCards; i++) {
+                        gameState.roundStructure.push(i);
+                    }
+                }
+
+                // Initialize scores
+                gameState.scores = Array(numPlayers).fill(0);
+                gameState.rounds = [];
+                gameState.currentRound = 0;
+
+                document.getElementById('setupScreen').classList.add('hidden');
+                document.getElementById('gameScreen').classList.remove('hidden');
+                
+                setupRound();
+            } catch (error) {
+                // If there's an error, clear everything and force reload
+                clearSavedGame();
+                window.location.reload();
+            }
+        }
+
+        function setupRound() {
+            const roundNum = gameState.currentRound;
+            const numCards = gameState.roundStructure[roundNum];
+            const trumpIndex = roundNum % gameState.trumpSuits.length;
+            const trump = gameState.trumpSuits[trumpIndex];
+            
+            // Dealer rotates each round from the initial dealer
+            // Note: gameState.dealerIndex is set in startGame() to the starting dealer
+            // For subsequent rounds, we rotate from that starting point
+            const currentDealerIndex = (gameState.dealerIndex + roundNum) % gameState.players.length;
+            const dealerName = gameState.players[currentDealerIndex];
+            
+            // First bidder is the player after the dealer
+            const firstBidderIndex = (currentDealerIndex + 1) % gameState.players.length;
+
+            document.getElementById('currentRound').textContent = roundNum + 1;
+            document.getElementById('currentCards').textContent = numCards;
+            const trumpElement = document.getElementById('trumpSuit');
+            trumpElement.innerHTML = `<span style="color: ${trump.color}; font-weight: 700;">${trump.icon} ${trump.name}</span>`;
+            document.getElementById('dealerName').textContent = dealerName;
+            document.getElementById('totalBids').textContent = '0';
+            document.getElementById('totalTricks').textContent = '0';
+            document.getElementById('bidWarning').style.display = 'none';
+            document.getElementById('tricksWarning').style.display = 'none';
+            document.getElementById('consecutiveBidWarning').style.display = 'none';
+
+            const container = document.getElementById('scoringInputs');
+            container.innerHTML = '';
+
+            // Create player inputs in bidding order (starting after dealer)
+            for (let i = 0; i < gameState.players.length; i++) {
+                const playerIdx = (firstBidderIndex + i) % gameState.players.length;
+                const player = gameState.players[playerIdx];
+                const isDealer = playerIdx === currentDealerIndex;
+                const biddingPosition = i + 1;
+                
+                const div = document.createElement('div');
+                div.className = 'player-score-input' + (isDealer ? ' dealer' : '');
+                
+                let badgeHTML = '';
+                if (isDealer) {
+                    badgeHTML = '<span class="badge badge-dealer">🎴 Dealer (Bids Last)</span>';
+                } else {
+                    badgeHTML = `<span class="badge badge-position">Bids ${biddingPosition}${getOrdinalSuffix(biddingPosition)}</span>`;
+                }
+                
+                // Check for consecutive bid restriction (3 in a row)
+                let forbiddenBids = [];
+                if (gameState.rounds.length >= 2) {
+                    const previousBid1 = gameState.rounds[gameState.rounds.length - 1].bids[playerIdx];
+                    const previousBid2 = gameState.rounds[gameState.rounds.length - 2].bids[playerIdx];
+                    
+                    if (previousBid1 === previousBid2) {
+                        forbiddenBids.push(previousBid1);
+                    }
+                }
+                
+                let restrictionHTML = '';
+                if (forbiddenBids.length > 0) {
+                    restrictionHTML = `<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 6px; margin-bottom: 8px; font-size: 12px; color: #856404; font-weight: 600;">
+                        ⚠️ Cannot bid: ${forbiddenBids.join(', ')} (3x in a row)
+                    </div>`;
+                }
+                
+                // Add dealer-specific restriction info
+                let dealerRestrictionHTML = '';
+                if (isDealer) {
+                    dealerRestrictionHTML = `<div id="dealerRestriction${playerIdx}" style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 6px; margin-bottom: 8px; font-size: 12px; color: #721c24; font-weight: 600; display: none;">
+                        🚫 <span id="dealerForbiddenBid${playerIdx}"></span>
+                    </div>`;
+                }
+                
+                // Determine next player for auto-focus
+                const nextPlayerIdx = i < gameState.players.length - 1 
+                    ? (firstBidderIndex + i + 1) % gameState.players.length 
+                    : null;
+                
+                div.innerHTML = `
+                    <h3>
+                        <span class="player-name">${player}</span>
+                        ${badgeHTML}
+                    </h3>
+                    ${restrictionHTML}
+                    ${dealerRestrictionHTML}
+                    <div class="score-inputs">
+                        <div>
+                            <label>Bid</label>
+                            <input type="number" id="bid${playerIdx}" min="0" max="${numCards}" 
+                                   inputmode="numeric" pattern="[0-9]*"
+                                   onchange="updateTotalBids()" 
+                                   oninput="handleBidInput(${playerIdx}, ${nextPlayerIdx})"
+                                   data-player-idx="${playerIdx}">
+                        </div>
+                        <div>
+                            <label>Tricks Won</label>
+                            <input type="number" id="tricks${playerIdx}" min="0" max="${numCards}"
+                                   inputmode="numeric" pattern="[0-9]*"
+                                   onchange="updateTotalTricks()" 
+                                   oninput="handleTricksInput(${playerIdx}, ${nextPlayerIdx})"
+                                   data-player-idx="${playerIdx}">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            }
+            
+            // Store current dealer index for use in submitRound
+            gameState.currentDealerIndex = currentDealerIndex;
+            
+            // Auto-focus on first player's bid input
+            setTimeout(() => {
+                const firstBidInput = document.getElementById(`bid${firstBidderIndex}`);
+                if (firstBidInput) firstBidInput.focus();
+            }, 100);
+        }
+        
+        function handleBidInput(currentPlayerIdx, nextPlayerIdx) {
+            const currentInput = document.getElementById(`bid${currentPlayerIdx}`);
+            const value = currentInput.value;
+            
+            // If a value has been entered and there's a next player
+            if (value !== '' && value !== null && nextPlayerIdx !== null) {
+                setTimeout(() => {
+                    const nextInput = document.getElementById(`bid${nextPlayerIdx}`);
+                    if (nextInput) {
+                        nextInput.focus();
+                        // On iOS, this helps ensure the keyboard stays open
+                        nextInput.select();
+                    }
+                }, 150);
+            }
+        }
+        
+        function handleTricksInput(currentPlayerIdx, nextPlayerIdx) {
+            const currentInput = document.getElementById(`tricks${currentPlayerIdx}`);
+            const value = currentInput.value;
+            
+            // If a value has been entered and there's a next player
+            if (value !== '' && value !== null && nextPlayerIdx !== null) {
+                setTimeout(() => {
+                    const nextInput = document.getElementById(`tricks${nextPlayerIdx}`);
+                    if (nextInput) {
+                        nextInput.focus();
+                        // On iOS, this helps ensure the keyboard stays open
+                        nextInput.select();
+                    }
+                }, 150);
+            }
+        }
+        
+        function getOrdinalSuffix(num) {
+            const j = num % 10;
+            const k = num % 100;
+            if (j === 1 && k !== 11) return 'st';
+            if (j === 2 && k !== 12) return 'nd';
+            if (j === 3 && k !== 13) return 'rd';
+            return 'th';
+        }
+
+        function updateTotalBids() {
+            let total = 0;
+            gameState.players.forEach((_, idx) => {
+                const bid = parseInt(document.getElementById(`bid${idx}`).value) || 0;
+                total += bid;
+            });
+            document.getElementById('totalBids').textContent = total;
+            
+            // Check if total bids equals number of cards (not allowed)
+            const numCards = gameState.roundStructure[gameState.currentRound];
+            const warning = document.getElementById('bidWarning');
+            if (total === numCards) {
+                warning.style.display = 'flex';
+            } else {
+                warning.style.display = 'none';
+            }
+            
+            // Update dealer's forbidden bid warning
+            const dealerIdx = gameState.currentDealerIndex;
+            const dealerRestriction = document.getElementById(`dealerRestriction${dealerIdx}`);
+            const dealerForbiddenBid = document.getElementById(`dealerForbiddenBid${dealerIdx}`);
+            
+            if (dealerRestriction && dealerForbiddenBid) {
+                // Calculate what the dealer cannot bid
+                const dealerCurrentBid = parseInt(document.getElementById(`bid${dealerIdx}`).value) || 0;
+                let otherBidsTotal = 0;
+                
+                gameState.players.forEach((_, idx) => {
+                    if (idx !== dealerIdx) {
+                        otherBidsTotal += parseInt(document.getElementById(`bid${idx}`).value) || 0;
+                    }
+                });
+                
+                const forbiddenDealerBid = numCards - otherBidsTotal;
+                
+                // Only show if the forbidden bid is valid (0 to numCards) and dealer hasn't bid yet or has bid the forbidden value
+                if (forbiddenDealerBid >= 0 && forbiddenDealerBid <= numCards) {
+                    dealerForbiddenBid.textContent = `Cannot bid ${forbiddenDealerBid} (total would = ${numCards})`;
+                    dealerRestriction.style.display = 'block';
+                } else {
+                    dealerRestriction.style.display = 'none';
+                }
+            }
+            
+            // Check for three consecutive identical bids
+            const consecutiveWarning = document.getElementById('consecutiveBidWarning');
+            const consecutiveMessage = document.getElementById('consecutiveBidMessage');
+            if (gameState.rounds.length >= 2) {
+                let warningText = '';
+                for (let playerIdx = 0; playerIdx < gameState.players.length; playerIdx++) {
+                    const player = gameState.players[playerIdx];
+                    const currentBid = parseInt(document.getElementById(`bid${playerIdx}`).value);
+                    if (isNaN(currentBid)) continue; // Skip if no bid entered yet
+                    
+                    const previousBid1 = gameState.rounds[gameState.rounds.length - 1].bids[playerIdx];
+                    const previousBid2 = gameState.rounds[gameState.rounds.length - 2].bids[playerIdx];
+                    
+                    if (currentBid === previousBid1 && currentBid === previousBid2) {
+                        warningText = `${player} has bid ${currentBid} for three consecutive rounds!`;
+                        break;
+                    }
+                }
+                
+                if (warningText) {
+                    consecutiveMessage.textContent = warningText;
+                    consecutiveWarning.style.display = 'flex';
+                } else {
+                    consecutiveWarning.style.display = 'none';
+                }
+            } else {
+                consecutiveWarning.style.display = 'none';
+            }
+        }
+
+        function updateTotalTricks() {
+            let total = 0;
+            gameState.players.forEach((_, idx) => {
+                const tricks = parseInt(document.getElementById(`tricks${idx}`).value) || 0;
+                total += tricks;
+            });
+            document.getElementById('totalTricks').textContent = total;
+            
+            // Check if total tricks equals number of cards (required)
+            const numCards = gameState.roundStructure[gameState.currentRound];
+            const warning = document.getElementById('tricksWarning');
+            if (total !== numCards && total > 0) {
+                warning.style.display = 'flex';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+
+        function submitRound() {
+            // Calculate total bids
+            let totalBids = 0;
+            gameState.players.forEach((_, idx) => {
+                const bid = parseInt(document.getElementById(`bid${idx}`).value) || 0;
+                totalBids += bid;
+            });
+            
+            // Validate: total bids cannot equal number of cards
+            const numCards = gameState.roundStructure[gameState.currentRound];
+            if (totalBids === numCards) {
+                showErrorDialog('Invalid Bids!', 'Total bids cannot equal the number of cards dealt.\n\nThe dealer (last bidder) must ensure the total is different.');
+                return;
+            }
+            
+            // Calculate total tricks won
+            let totalTricks = 0;
+            gameState.players.forEach((_, idx) => {
+                const tricks = parseInt(document.getElementById(`tricks${idx}`).value) || 0;
+                totalTricks += tricks;
+            });
+            
+            // Validate: total tricks must equal number of cards
+            if (totalTricks !== numCards) {
+                showErrorDialog('Invalid Tricks!', `Total tricks won (${totalTricks}) must equal the number of cards dealt (${numCards}).\n\nPlease check your entries.`);
+                return;
+            }
+            
+            // Check for three consecutive identical bids (before storing this round)
+            if (gameState.rounds.length >= 2) {
+                for (let playerIdx = 0; playerIdx < gameState.players.length; playerIdx++) {
+                    const player = gameState.players[playerIdx];
+                    const currentBid = parseInt(document.getElementById(`bid${playerIdx}`).value) || 0;
+                    const previousBid1 = gameState.rounds[gameState.rounds.length - 1].bids[playerIdx];
+                    const previousBid2 = gameState.rounds[gameState.rounds.length - 2].bids[playerIdx];
+                    
+                    if (currentBid === previousBid1 && currentBid === previousBid2) {
+                        showErrorDialog('Invalid Bid!', `${player} has bid ${currentBid} for three consecutive rounds.\n\nPlayers are not allowed to bid the same value three hands in a row.`);
+                        return;
+                    }
+                }
+            }
+            
+            const roundData = {
+                cards: gameState.roundStructure[gameState.currentRound],
+                trump: gameState.trumpSuits[gameState.currentRound % gameState.trumpSuits.length],
+                dealer: gameState.players[gameState.currentDealerIndex],
+                bids: [],
+                tricks: [],
+                points: []
+            };
+
+            // Collect bids and tricks
+            gameState.players.forEach((_, idx) => {
+                const bid = parseInt(document.getElementById(`bid${idx}`).value) || 0;
+                const tricks = parseInt(document.getElementById(`tricks${idx}`).value) || 0;
+                
+                roundData.bids.push(bid);
+                roundData.tricks.push(tricks);
+
+                // Calculate points: 
+                // If bid met exactly: 10 + tricks won
+                // If bid not met: 1 × tricks won
+                const points = (bid === tricks) ? (10 + tricks) : tricks;
+                roundData.points.push(points);
+                gameState.scores[idx] += points;
+            });
+
+            gameState.rounds.push(roundData);
+            gameState.currentRound++;
+            
+            // Auto-save game state after every round
+            saveGameState();
+
+            // Check if game is over
+            if (gameState.currentRound >= gameState.roundStructure.length) {
+                // Record game statistics
+                recordGameResults();
+                
+                // Clear auto-saved game since it's complete
+                clearSavedGame();
+                
+                // Game is complete - show final results
+                document.getElementById('scoringInputs').innerHTML = '';
+                document.querySelector('.round-info').innerHTML = '<h2 style="color: #00d4aa; margin-bottom: 15px;">🏆 Game Complete!</h2>';
+                
+                // Hide the submit button
+                document.querySelector('.btn[onclick="submitRound()"]').style.display = 'none';
+                
+                // Auto-show scoreboard
+                document.getElementById('scoreboardSection').classList.remove('hidden');
+                updateScoreboard();
+                
+                // Rank all players with tiebreaker logic
+                const playerRankings = gameState.players.map((name, idx) => {
+                    let successfulBids = 0;
+                    let totalBids = 0;
+                    
+                    gameState.rounds.forEach(round => {
+                        const bid = round.bids[idx];
+                        const tricks = round.tricks[idx];
+                        totalBids += bid;
+                        if (bid === tricks) {
+                            successfulBids++;
+                        }
+                    });
+                    
+                    return {
+                        name: name,
+                        playerIdx: idx,
+                        score: gameState.scores[idx],
+                        successfulBids: successfulBids,
+                        totalBids: totalBids
+                    };
+                });
+                
+                // Sort by: score (desc), then successful bids (desc), then total bids (desc)
+                playerRankings.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    if (b.successfulBids !== a.successfulBids) return b.successfulBids - a.successfulBids;
+                    return b.totalBids - a.totalBids;
+                });
+                
+                // Assign ranks with ties
+                let currentRank = 1;
+                playerRankings.forEach((player, idx) => {
+                    if (idx > 0) {
+                        const prev = playerRankings[idx - 1];
+                        // If all tiebreaker criteria are equal, same rank
+                        if (player.score === prev.score && 
+                            player.successfulBids === prev.successfulBids && 
+                            player.totalBids === prev.totalBids) {
+                            player.rank = prev.rank;
+                        } else {
+                            currentRank = idx + 1;
+                            player.rank = currentRank;
+                        }
+                    } else {
+                        player.rank = 1;
+                    }
+                });
+                
+                // Create final standings message
+                let standingsHTML = '<div style="background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border: 2px solid #00d4aa;">';
+                standingsHTML += '<h3 style="margin: 0 0 15px 0; color: #00d4aa; text-align: center;">🏆 Final Standings 🏆</h3>';
+                
+                playerRankings.forEach((player) => {
+                    const medal = player.rank === 1 ? '🥇' : player.rank === 2 ? '🥈' : player.rank === 3 ? '🥉' : `${player.rank}.`;
+                    const highlight = player.rank === 1 ? 'background: linear-gradient(135deg, #fff9e6 0%, #fff 100%); border: 2px solid #ffc107;' : 'background: #f8f9fa; border: 2px solid #e0e0e0;';
+                    
+                    standingsHTML += `
+                        <div style="${highlight} padding: 12px; border-radius: 8px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 24px; min-width: 40px;">${medal}</span>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 16px; color: #333;">${player.name}</div>
+                                    <div style="font-size: 12px; color: #666;">
+                                        ${player.successfulBids} successful bids • ${player.totalBids} total bids
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="font-size: 20px; font-weight: 700; color: #00d4aa;">${player.score}</div>
+                        </div>
+                    `;
+                });
+                
+                standingsHTML += '</div>';
+                
+                document.getElementById('scoreboardSection').insertAdjacentHTML('afterbegin', standingsHTML);
+            } else {
+                setupRound();
+            }
+        }
+
+        function showScoreboard() {
+            const section = document.getElementById('scoreboardSection');
+            
+            // Only toggle if game is still in progress
+            if (gameState.currentRound < gameState.roundStructure.length) {
+                section.classList.toggle('hidden');
+            }
+            
+            if (!section.classList.contains('hidden')) {
+                updateScoreboard();
+            }
+        }
+
+        function updateScoreboard() {
+            const table = document.getElementById('scoreboardTable');
+            let html = '<tr><th>Round</th><th>Cards</th><th>Trump</th><th>Dealer</th>';
+            
+            gameState.players.forEach(player => {
+                html += `<th>${player}</th>`;
+            });
+            html += '<th>Action</th></tr>';
+
+            gameState.rounds.forEach((round, roundIdx) => {
+                const trump = round.trump;
+                const trumpDisplay = typeof trump === 'object' 
+                    ? `<span style="color: ${trump.color}; font-weight: 700;">${trump.icon} ${trump.name}</span>`
+                    : trump; // Fallback for old data
+                
+                html += `<tr><td>${roundIdx + 1}</td><td>${round.cards}</td><td>${trumpDisplay}</td><td>${round.dealer}</td>`;
+                round.points.forEach((points, playerIdx) => {
+                    const bid = round.bids[playerIdx];
+                    const tricks = round.tricks[playerIdx];
+                    html += `<td>${points}<br><small>(${bid}/${tricks})</small></td>`;
+                });
+                html += `<td><button onclick="editRound(${roundIdx})" style="padding: 5px 10px; background: #00d4aa; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Edit</button></td></tr>`;
+            });
+
+            // Total row
+            html += '<tr class="total-row"><td colspan="4">Total</td>';
+            gameState.scores.forEach(score => {
+                html += `<td>${score}</td>`;
+            });
+            html += '<td></td></tr>';
+
+            table.innerHTML = html;
+        }
+
+        function editRound(roundIdx) {
+            const round = gameState.rounds[roundIdx];
+            const numCards = round.cards;
+            const trump = round.trump;
+            const trumpDisplay = typeof trump === 'object' 
+                ? `<span style="color: ${trump.color}; font-weight: 700;">${trump.icon} ${trump.name}</span>`
+                : trump;
+            
+            // Create a modal-style edit interface
+            const editHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;" id="editModal">
+                    <div style="background: white; padding: 20px; border-radius: 12px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;">
+                        <h2 style="margin-bottom: 20px; color: #333;">Edit Round ${roundIdx + 1}</h2>
+                        <p style="margin-bottom: 15px; color: #666;">${numCards} cards | ${trumpDisplay}</p>
+                        <div id="editInputs"></div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button onclick="saveEditedRound(${roundIdx})" class="btn" style="flex: 1;">Save Changes</button>
+                            <button onclick="closeEditModal()" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', editHTML);
+            
+            // Populate edit inputs
+            const editInputsContainer = document.getElementById('editInputs');
+            gameState.players.forEach((player, playerIdx) => {
+                const bid = round.bids[playerIdx];
+                const tricks = round.tricks[playerIdx];
+                
+                const inputHTML = `
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                        <h3 style="margin-bottom: 10px; color: #333; font-size: 16px;">${player}</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="font-size: 14px; color: #666; display: block; margin-bottom: 5px;">Bid</label>
+                                <input type="number" id="editBid${playerIdx}" min="0" max="${numCards}" value="${bid}" 
+                                       style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 16px; text-align: center;">
+                            </div>
+                            <div>
+                                <label style="font-size: 14px; color: #666; display: block; margin-bottom: 5px;">Tricks Won</label>
+                                <input type="number" id="editTricks${playerIdx}" min="0" max="${numCards}" value="${tricks}"
+                                       style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 16px; text-align: center;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                editInputsContainer.insertAdjacentHTML('beforeend', inputHTML);
+            });
+        }
+
+        function saveEditedRound(roundIdx) {
+            const round = gameState.rounds[roundIdx];
+            const numCards = round.cards;
+            
+            // Collect new values
+            let totalBids = 0;
+            let totalTricks = 0;
+            const newBids = [];
+            const newTricks = [];
+            
+            gameState.players.forEach((_, playerIdx) => {
+                const bid = parseInt(document.getElementById(`editBid${playerIdx}`).value) || 0;
+                const tricks = parseInt(document.getElementById(`editTricks${playerIdx}`).value) || 0;
+                newBids.push(bid);
+                newTricks.push(tricks);
+                totalBids += bid;
+                totalTricks += tricks;
+            });
+            
+            // Validate: total bids cannot equal number of cards
+            if (totalBids === numCards) {
+                showErrorDialog('Invalid Bids!', 'Total bids cannot equal the number of cards dealt.');
+                return;
+            }
+            
+            // Validate: total tricks must equal number of cards
+            if (totalTricks !== numCards) {
+                showErrorDialog('Invalid Tricks!', `Total tricks won (${totalTricks}) must equal the number of cards dealt (${numCards}).`);
+                return;
+            }
+            
+            // Update the round data
+            round.bids = newBids;
+            round.tricks = newTricks;
+            round.points = [];
+            
+            // Recalculate points for this round
+            newBids.forEach((bid, idx) => {
+                const tricks = newTricks[idx];
+                const points = (bid === tricks) ? (10 + tricks) : tricks;
+                round.points.push(points);
+            });
+            
+            // Recalculate all totals from scratch
+            gameState.scores = Array(gameState.players.length).fill(0);
+            gameState.rounds.forEach(r => {
+                r.points.forEach((points, idx) => {
+                    gameState.scores[idx] += points;
+                });
+            });
+            
+            closeEditModal();
+            updateScoreboard();
+            
+            // Show success message
+            const successHTML = `
+                <div id="successDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); text-align: center;">
+                        <h3 style="margin: 0 0 15px 0; color: #28a745; font-size: 20px;">✓ Success</h3>
+                        <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">Round updated successfully!</p>
+                        <button id="successOk" style="padding: 14px 30px; background: #00d4aa; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">OK</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', successHTML);
+            document.getElementById('successOk').addEventListener('click', function() {
+                document.getElementById('successDialog').remove();
+            });
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function resetGame() {
+            // Clean up any existing dialogs first
+            const existingDialogs = ['resetConfirmDialog', 'restoreGameDialog', 'errorDialog', 'successDialog', 'confirmDialog'];
+            existingDialogs.forEach(id => {
+                const dialog = document.getElementById(id);
+                if (dialog) dialog.remove();
+            });
+            
+            // Create custom confirmation dialog
+            const confirmHTML = `
+                <div id="resetConfirmDialog" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    <div style="background: white; padding: 25px; border-radius: 12px; max-width: 400px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 20px;">Start New Game?</h3>
+                        <p style="margin: 0 0 20px 0; color: #666; font-size: 16px;">The page will refresh to start a fresh game. All current progress will be lost.</p>
+                        <div style="display: flex; gap: 10px;">
+                            <button id="resetNo" style="flex: 1; padding: 14px; background: #6c757d; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">Cancel</button>
+                            <button id="resetYes" style="flex: 1; padding: 14px; background: #00d4aa; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer;">New Game</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', confirmHTML);
+            
+            document.getElementById('resetNo').addEventListener('click', function() {
+                document.getElementById('resetConfirmDialog').remove();
+            });
+            
+            document.getElementById('resetYes').addEventListener('click', function() {
+                document.getElementById('resetConfirmDialog').remove();
+                clearSavedGame();
+                window.location.reload();
+            });
+        }
+        
+        function refreshPage() {
+            clearSavedGame();
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
