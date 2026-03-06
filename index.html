@@ -402,9 +402,9 @@
     }
 
     .info-tile .label {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0.8px;
+      letter-spacing: 1px;
       text-transform: uppercase;
       color: var(--text-muted);
       line-height: 1;
@@ -414,15 +414,9 @@
       font-size: 18px;
       font-weight: 700;
       color: var(--text);
-      margin-top: 3px;
+      margin-top: 4px;
       line-height: 1;
     }
-
-    .info-tile .value.teal { color: var(--teal); }
-    .info-tile .value.gold { color: var(--gold); }
-    .info-tile .value.big  { font-size: 26px; }
-
-    /* Cards tile is same as others */
 
     /* ── Bid over/under indicator ── */
     .bid-indicator {
@@ -950,31 +944,27 @@
   <!-- Round info — always visible, never scrolls -->
   <div class="game-round-bar">
     <div class="card" id="roundInfoCard">
-      <div style="display:flex;align-items:baseline;justify-content:space-between">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:0">
         <div class="card-label" id="roundLabel" style="margin-bottom:0">Round 1</div>
-        <div style="font-size:12px;color:var(--text-muted);font-weight:600" id="roundProgress"></div>
+        <div class="card-label" id="roundProgress" style="margin-bottom:0;color:var(--text-muted)"></div>
       </div>
 
       <div class="round-info-grid">
         <div class="info-tile">
           <div class="label">Cards</div>
-          <div class="value teal big" id="currentCards">7</div>
+          <div class="value" id="currentCards">7</div>
         </div>
         <div class="info-tile">
           <div class="label">Trump</div>
-          <div class="value" id="trumpSuit" style="font-size:15px;margin-top:4px">♥ H</div>
+          <div class="value" id="trumpSuit">—</div>
         </div>
         <div class="info-tile">
           <div class="label">Dealer</div>
-          <div class="value gold" id="dealerName" style="font-size:14px;margin-top:4px">—</div>
+          <div class="value" id="dealerName">—</div>
         </div>
         <div class="info-tile">
           <div class="label" id="bidsWonLabel">Bids / Won</div>
-          <div class="value" style="font-size:15px;margin-top:4px">
-            <span id="totalBids" style="color:var(--teal)">0</span>
-            <span style="color:var(--text-muted)"> / </span>
-            <span id="totalTricks">0</span>
-          </div>
+          <div class="value"><span id="totalBids">0</span> / <span id="totalTricks">0</span></div>
         </div>
       </div>
 
@@ -1344,15 +1334,23 @@ function ordSuffix(n) {
 
 function stepBid(idx, delta) {
   if (_bidsLocked) return;
-  if (idx !== gs.currentBidderIdx) return;
+  // Allow editing if this player is the current bidder OR has already been unlocked (bid > 0 and next player is active)
+  const order = gs.biddingOrder;
+  const myPos = order.indexOf(idx);
+  const currentPos = order.indexOf(gs.currentBidderIdx);
+  if (myPos > currentPos) return; // not yet unlocked
+
   const numCards = gs.roundStructure[gs.currentRound];
-  const newVal = Math.max(0, Math.min(numCards, (gs.bidVals[idx] || 0) + delta));
+  const oldVal = gs.bidVals[idx] || 0;
+  const newVal = Math.max(0, Math.min(numCards, oldVal + delta));
   gs.bidVals[idx] = newVal;
   document.getElementById(`bidVal${idx}`).textContent = newVal;
   document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
 
-  // First + tap (going from 0 to 1) advances to next player
-  if (delta > 0 && newVal === 1) advanceBidder(idx);
+  // First + tap advances to next player (but current player stays editable)
+  if (delta > 0 && oldVal === 0 && newVal === 1 && idx === gs.currentBidderIdx) {
+    advanceBidder(idx);
+  }
 
   updateTotals();
 }
