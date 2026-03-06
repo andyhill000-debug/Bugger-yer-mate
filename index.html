@@ -8,9 +8,51 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BYM Scorer">
   <meta name="app-version" content="2026.02.27.01">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.svg">
   <title>Bugger Yer Mate</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* Fonts — self-contained, no external requests */
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 700;
+      src: local('Playfair Display Bold'), local('PlayfairDisplay-Bold'),
+           local('Georgia Bold'), local('Georgia');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      font-style: normal;
+      font-weight: 400;
+      src: local('DM Sans'), local('DMSans-Regular'),
+           local('-apple-system'), local('BlinkMacSystemFont');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      font-style: normal;
+      font-weight: 500;
+      src: local('DM Sans Medium'), local('DMSans-Medium'),
+           local('-apple-system'), local('BlinkMacSystemFont');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      font-style: normal;
+      font-weight: 600;
+      src: local('DM Sans SemiBold'), local('DMSans-SemiBold'),
+           local('-apple-system'), local('BlinkMacSystemFont');
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'DM Sans';
+      font-style: normal;
+      font-weight: 700;
+      src: local('DM Sans Bold'), local('DMSans-Bold'),
+           local('-apple-system'), local('BlinkMacSystemFont');
+      font-display: swap;
+    }
     :root {
       --teal: #00d4aa;
       --teal-light: #00e8bb;
@@ -1819,6 +1861,15 @@ function importStatistics() {
 }
 
 function importStatisticsFromHeader() { importStatistics(); }
+
+// ═══════════ SERVICE WORKER ═══════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW registered:', reg.scope))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
 
 function clearAllStatistics() {
   confirmDialog(

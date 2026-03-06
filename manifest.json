@@ -1,30 +1,24 @@
 {
-  "name": "Bugger Yer Mate - Card Game Scorer",
+  "name": "Bugger Yer Mate",
   "short_name": "BYM Scorer",
-  "description": "Professional scoring app for Bugger Yer Mate (Nomination Whist) card game",
-  "start_url": "./nomination-whist-scorer.html",
+  "description": "Nomination whist scorer by Hillfred",
+  "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#00d4aa",
+  "background_color": "#0a0a0a",
   "theme_color": "#00d4aa",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(60, 60)'%3E%3Cg transform='rotate(45 0 0)'%3E%3Crect x='-36' y='-36' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='-36' width='24' height='24' fill='%2300d4aa' rx='2'/%3E%3Crect x='24' y='-36' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-36' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='24' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-36' y='24' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='24' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='24' y='24' width='24' height='24' fill='%2300d4aa' rx='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E",
-      "sizes": "120x120",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(60, 60)'%3E%3Cg transform='rotate(45 0 0)'%3E%3Crect x='-36' y='-36' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='-36' width='24' height='24' fill='%2300d4aa' rx='2'/%3E%3Crect x='24' y='-36' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-36' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='24' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-36' y='24' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='24' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='24' y='24' width='24' height='24' fill='%2300d4aa' rx='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E",
+      "src": "icon-192.svg",
       "sizes": "192x192",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg transform='translate(60, 60)'%3E%3Cg transform='rotate(45 0 0)'%3E%3Crect x='-36' y='-36' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='-36' width='24' height='24' fill='%2300d4aa' rx='2'/%3E%3Crect x='24' y='-36' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-36' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='24' y='-6' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-36' y='24' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='-6' y='24' width='24' height='24' fill='%231a1a1a' rx='2'/%3E%3Crect x='24' y='24' width='24' height='24' fill='%2300d4aa' rx='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E",
+      "src": "icon-512.svg",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
