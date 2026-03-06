@@ -1300,11 +1300,11 @@ function updateTotals() {
     const diff = totalBids - numCards;
     if (diff > 0) {
       indicator.className = 'bid-indicator over';
-      indicator.innerHTML = `▲ Over by ${diff} — more tricks bid than cards dealt`;
+      indicator.innerHTML = `▲ Over by ${diff}`;
       indicator.style.display = 'flex';
     } else if (diff < 0) {
       indicator.className = 'bid-indicator under';
-      indicator.innerHTML = `▼ Under by ${Math.abs(diff)} — fewer tricks bid than cards dealt`;
+      indicator.innerHTML = `▼ Under by ${Math.abs(diff)}`;
       indicator.style.display = 'flex';
     } else {
       // Exactly equal — hidden (bidWarning handles this case as an error)
