@@ -495,12 +495,12 @@
     .restriction-note {
       font-size: 13px; font-weight: 700; color: var(--red);
       background: rgba(224,82,82,0.08); border: 1px solid rgba(224,82,82,0.2);
-      border-radius: 6px; padding: 2px 7px; white-space: nowrap;
+      border-radius: 6px; padding: 6px 10px; display: block; width: 100%;
     }
     .dealer-cannot-note {
       font-size: 13px; font-weight: 700; color: var(--gold);
       background: rgba(201,169,97,0.08); border: 1px solid rgba(201,169,97,0.25);
-      border-radius: 6px; padding: 2px 7px; display: none; white-space: nowrap;
+      border-radius: 6px; padding: 6px 10px; display: none; width: 100%;
     }
 
     /* Stepper widget */
@@ -1233,31 +1233,35 @@ function setupRound() {
     div.className = 'player-card' + (isDealer ? ' is-dealer' : '');
     div.id = `pcard${playerIdx}`;
     div.innerHTML = `
-      <div class="player-card-info">
-        <div class="player-card-name">${player}</div>
-        <div class="player-card-meta">
-          ${badge}
-          ${forbiddenBids.length ? `<span class="restriction-note">✗ no&nbsp;${forbiddenBids.join(', ')}</span>` : ''}
-          ${isDealer ? `<span class="dealer-cannot-note" id="dealerNote${playerIdx}">Can't bid <span id="dealerForbid${playerIdx}"></span></span>` : ''}
-        </div>
-      </div>
-      <div class="stepper-pair">
-        <div class="stepper-group">
-          <div class="stepper-label">Bid</div>
-          <div class="stepper" id="bidStepper${playerIdx}">
-            <div class="stepper-btn disabled" id="bidMinus${playerIdx}" onclick="stepBid(${playerIdx},-1)">−</div>
-            <div class="stepper-val" id="bidVal${playerIdx}">0</div>
-            <div class="stepper-btn" onclick="stepBid(${playerIdx},+1)">+</div>
+      <div style="display:flex;flex-direction:column;width:100%;gap:6px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="player-card-info">
+            <div class="player-card-name">${player}</div>
+            <div class="player-card-meta">
+              ${badge}
+            </div>
+          </div>
+          <div class="stepper-pair">
+            <div class="stepper-group">
+              <div class="stepper-label">Bid</div>
+              <div class="stepper" id="bidStepper${playerIdx}">
+                <div class="stepper-btn disabled" id="bidMinus${playerIdx}" onclick="stepBid(${playerIdx},-1)">−</div>
+                <div class="stepper-val" id="bidVal${playerIdx}">0</div>
+                <div class="stepper-btn" onclick="stepBid(${playerIdx},+1)">+</div>
+              </div>
+            </div>
+            <div class="stepper-group">
+              <div class="stepper-label">Won</div>
+              <div class="stepper locked" id="wonStepper${playerIdx}">
+                <div class="stepper-btn disabled" id="wonMinus${playerIdx}" onclick="stepTrick(${playerIdx},-1)">−</div>
+                <div class="stepper-val" id="wonVal${playerIdx}">0</div>
+                <div class="stepper-btn disabled" id="wonPlus${playerIdx}" onclick="stepTrick(${playerIdx},+1)">+</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="stepper-group">
-          <div class="stepper-label">Won</div>
-          <div class="stepper locked" id="wonStepper${playerIdx}">
-            <div class="stepper-btn disabled" id="wonMinus${playerIdx}" onclick="stepTrick(${playerIdx},-1)">−</div>
-            <div class="stepper-val" id="wonVal${playerIdx}">0</div>
-            <div class="stepper-btn disabled" id="wonPlus${playerIdx}" onclick="stepTrick(${playerIdx},+1)">+</div>
-          </div>
-        </div>
+        ${forbiddenBids.length ? `<div class="restriction-note">✗ Cannot bid ${forbiddenBids.join(' or ')} (3 in a row)</div>` : ''}
+        ${isDealer ? `<div class="dealer-cannot-note" id="dealerNote${playerIdx}">🚫 Dealer cannot bid <strong id="dealerForbid${playerIdx}"></strong> — total would equal cards dealt</div>` : ''}
       </div>
     `;
     container.appendChild(div);
@@ -1339,7 +1343,7 @@ function updateTotals() {
   if (dnote && dforbid) {
     if (forbidden >= 0 && forbidden <= numCards) {
       dforbid.textContent = forbidden;
-      dnote.style.display = 'inline';
+      dnote.style.display = 'block';
     } else {
       dnote.style.display = 'none';
     }
