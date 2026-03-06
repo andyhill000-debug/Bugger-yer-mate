@@ -605,29 +605,41 @@
       align-items: flex-end;
     }
 
-    /* Phase indicator on round card */
-    .phase-badge {
+    /* Phase badge replaced by inline action row */
+    .round-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .round-action-btn {
       display: inline-flex;
       align-items: center;
       gap: 5px;
       font-size: 13px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      padding: 4px 10px;
+      letter-spacing: 0.3px;
+      padding: 6px 14px;
       border-radius: 20px;
-      margin-top: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.15s;
     }
 
-    .phase-badge.bidding {
-      background: rgba(0,212,170,0.1);
+    .round-action-btn:active { opacity: 0.75; }
+
+    .round-action-btn.teal {
+      background: rgba(0,212,170,0.12);
       color: var(--teal);
-      border: 1px solid rgba(0,212,170,0.25);
+      border: 1px solid rgba(0,212,170,0.3);
     }
 
-    .phase-badge.tricks {
-      background: rgba(201,169,97,0.1);
+    .round-action-btn.gold {
+      background: rgba(201,169,97,0.12);
       color: var(--gold);
-      border: 1px solid rgba(201,169,97,0.25);
+      border: 1px solid rgba(201,169,97,0.3);
     }
 
     /* ── Scoreboard ── */
@@ -858,6 +870,8 @@
       </svg>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" id="headerScoresBtn" onclick="toggleScoreboard()" title="Scores" style="display:none">📊</button>
+      <button class="icon-btn" id="headerNewBtn" onclick="resetGame()" title="New Game" style="display:none">↺</button>
       <div class="icon-btn" onclick="importStatisticsFromHeader()" title="Import Stats">⬆</div>
       <div class="icon-btn" onclick="showStatistics()" title="Statistics">📈</div>
     </div>
@@ -968,7 +982,10 @@
       <div class="warn-strip" id="bidWarning">⚠ Total bids cannot equal cards dealt!</div>
       <div class="warn-strip" id="tricksWarning">⚠ Total tricks must equal cards dealt!</div>
       <div class="warn-strip amber" id="consecutiveBidWarning" style="display:none"></div>
-      <div id="phaseBadge" class="phase-badge bidding">● Bidding Phase</div>
+      <div id="roundActions" class="round-actions">
+        <button class="round-action-btn teal" id="confirmBidBtn" onclick="confirmBid()" style="display:none">✓ Confirm bid</button>
+        <button class="round-action-btn gold" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock bids</button>
+      </div>
     </div>
   </div>
 
@@ -987,16 +1004,8 @@
     </div>
   </div>
 
-  <!-- Fixed footer — action buttons -->
-  <div class="game-footer">
-    <button class="btn-primary" id="confirmBidBtn" onclick="confirmBid()" style="display:none;margin-bottom:6px;background:var(--teal)">✓ Confirm Bid</button>
-    <button class="btn-primary" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock Bids</button>
-    <div id="secondaryActions" style="display:flex;gap:6px;margin-top:6px">
-      <button class="btn-ghost" style="margin:0;flex:1" onclick="toggleScoreboard()">📊 Scores</button>
-      <button class="btn-ghost" style="margin:0;flex:1" onclick="showStatistics()">📈 Stats</button>
-      <button class="btn-ghost" style="margin:0;flex:1" onclick="resetGame()">↺ New</button>
-    </div>
-  </div>
+  <!-- Fixed footer — empty, actions moved to round card and header -->
+  <div class="game-footer" style="padding:0;border:none;height:env(safe-area-inset-bottom)"></div>
 
 </div>
 
@@ -1199,6 +1208,8 @@ function startGame() {
   document.getElementById('gameScreen').classList.remove('hidden');
   document.getElementById('scoreboardSection').classList.add('hidden');
   document.querySelector('.game-title-strip').classList.add('hidden');
+  document.getElementById('headerScoresBtn').style.display = 'flex';
+  document.getElementById('headerNewBtn').style.display = 'flex';
 
   setupRound();
 }
@@ -1227,13 +1238,11 @@ function setupRound() {
   // Reset to bidding phase
   _bidsLocked = false;
   const actionBtn = document.getElementById('mainActionBtn');
-  if (actionBtn) { actionBtn.textContent = '🔒 Lock Bids'; }
-  const pb = document.getElementById('phaseBadge');
-  if (pb) { pb.className = 'phase-badge bidding'; pb.textContent = '● Bidding Phase'; }
+  if (actionBtn) { actionBtn.textContent = '🔒 Lock bids'; actionBtn.className = 'round-action-btn gold'; }
 
-  // Restore secondary action buttons and hide bid indicator
-  const secActions = document.getElementById('secondaryActions');
-  if (secActions) secActions.classList.remove('hidden');
+  // Show header game buttons, hide bid indicator, reset confirm btn
+  document.getElementById('headerScoresBtn').style.display = 'flex';
+  document.getElementById('headerNewBtn').style.display = 'flex';
   const ind = document.getElementById('bidIndicator');
   if (ind) ind.style.display = 'none';
   const confirmBtn = document.getElementById('confirmBidBtn');
@@ -1526,13 +1535,8 @@ function lockBids() {
   document.getElementById('consecutiveBidWarning').style.display = 'none';
   document.getElementById('confirmBidBtn').style.display = 'none';
 
-  const pb = document.getElementById('phaseBadge');
-  if (pb) { pb.className = 'phase-badge tricks'; pb.textContent = '● Tricks Phase'; }
-
   const actionBtn = document.getElementById('mainActionBtn');
-  if (actionBtn) actionBtn.textContent = '✓ Submit Round';
-
-  document.getElementById('secondaryActions').classList.add('hidden');
+  if (actionBtn) { actionBtn.textContent = '✓ Submit round'; actionBtn.className = 'round-action-btn teal'; }
 
   toast('Bids locked! Enter tricks won.', 'success');
 }
@@ -1613,9 +1617,6 @@ function showFinalResults() {
   if (mainBtn) mainBtn.style.display = 'none';
 
   // Restore secondary buttons (scoreboard, stats, new game) for end screen
-  const secActions = document.getElementById('secondaryActions');
-  if (secActions) secActions.classList.remove('hidden');
-
   // Final standings card — insert at top of scroll area
   const standCard = document.createElement('div');
   standCard.className = 'card';
