@@ -23,6 +23,7 @@
       --text-secondary: #cccccc;
       --text-muted: #888888;
       --hillfred-black: #1a1a1a;
+      --fixed-top: 0px; /* set by JS after render */
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -109,6 +110,37 @@
 
     /* ── Container ── */
     .page { max-width: 640px; margin: 0 auto; padding: 10px 10px 80px; }
+
+    /* ── GAME SCREEN: fixed viewport layout ── */
+    #gameScreen {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - var(--fixed-top));
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .game-round-bar {
+      flex-shrink: 0;
+      padding: 8px 10px 0;
+    }
+
+    .game-scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 6px 10px 8px;
+    }
+
+    .game-footer {
+      flex-shrink: 0;
+      padding: 8px 10px;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom));
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
 
     /* ── Cards ── */
     .card {
@@ -857,64 +889,69 @@
 </div>
 
 <!-- ═══════════════════════════════════════ GAME SCREEN ═══════════════════════════════════════ -->
-<div id="gameScreen" class="page hidden">
+<div id="gameScreen" class="hidden">
 
-  <!-- Round info -->
-  <div class="card" id="roundInfoCard">
-    <div style="display:flex;align-items:baseline;justify-content:space-between">
-      <div class="card-label" id="roundLabel" style="margin-bottom:0">Round 1</div>
-      <div style="font-size:10px;color:var(--text-muted);font-weight:600" id="roundProgress"></div>
+  <!-- Round info — always visible, never scrolls -->
+  <div class="game-round-bar">
+    <div class="card" id="roundInfoCard">
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <div class="card-label" id="roundLabel" style="margin-bottom:0">Round 1</div>
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600" id="roundProgress"></div>
+      </div>
+
+      <div class="round-info-grid">
+        <div class="info-tile">
+          <div class="label">Cards</div>
+          <div class="value teal big" id="currentCards">7</div>
+        </div>
+        <div class="info-tile">
+          <div class="label">Trump</div>
+          <div class="value" id="trumpSuit" style="font-size:15px;margin-top:4px">♥ H</div>
+        </div>
+        <div class="info-tile">
+          <div class="label">Dealer</div>
+          <div class="value gold" id="dealerName" style="font-size:14px;margin-top:4px">—</div>
+        </div>
+        <div class="info-tile">
+          <div class="label" id="bidsWonLabel">Bids / Won</div>
+          <div class="value" style="font-size:15px;margin-top:4px">
+            <span id="totalBids" style="color:var(--teal)">0</span>
+            <span style="color:var(--text-muted)"> / </span>
+            <span id="totalTricks">0</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="bidIndicator" class="bid-indicator"></div>
+      <div class="warn-strip" id="bidWarning">⚠ Total bids cannot equal cards dealt!</div>
+      <div class="warn-strip" id="tricksWarning">⚠ Total tricks must equal cards dealt!</div>
+      <div class="warn-strip amber" id="consecutiveBidWarning" style="display:none"></div>
+      <div id="phaseBadge" class="phase-badge bidding">● Bidding Phase</div>
     </div>
+  </div>
 
-    <div class="round-info-grid">
-      <div class="info-tile">
-        <div class="label">Cards</div>
-        <div class="value teal big" id="currentCards">7</div>
-      </div>
-      <div class="info-tile">
-        <div class="label">Trump</div>
-        <div class="value" id="trumpSuit" style="font-size:13px;margin-top:4px">♥ H</div>
-      </div>
-      <div class="info-tile">
-        <div class="label">Dealer</div>
-        <div class="value gold" id="dealerName" style="font-size:12px;margin-top:4px">—</div>
-      </div>
-      <div class="info-tile">
-        <div class="label">Bids / Won</div>
-        <div class="value" style="font-size:13px;margin-top:4px">
-          <span id="totalBids" style="color:var(--teal)">0</span>
-          <span style="color:var(--text-muted)"> / </span>
-          <span id="totalTricks">0</span>
+  <!-- Player cards — scrollable area -->
+  <div class="game-scroll-area">
+    <div id="scoringInputs" class="scoring-grid"></div>
+
+    <!-- Scoreboard (shown after each round) -->
+    <div id="scoreboardSection" class="hidden" style="margin-top:8px">
+      <div class="card">
+        <div class="card-label">Scoreboard</div>
+        <div class="scoreboard-wrap">
+          <table id="scoreboardTable"></table>
         </div>
       </div>
     </div>
-
-    <div id="bidIndicator" class="bid-indicator"></div>
-
-    <div class="warn-strip" id="bidWarning">⚠ Total bids cannot equal cards dealt!</div>
-    <div class="warn-strip" id="tricksWarning">⚠ Total tricks must equal cards dealt!</div>
-    <div class="warn-strip amber" id="consecutiveBidWarning" style="display:none"></div>
-    <div id="phaseBadge" class="phase-badge bidding">● Bidding Phase</div>
   </div>
 
-  <!-- Scoring inputs -->
-  <div id="scoringInputs" class="scoring-grid"></div>
-
-  <!-- Actions -->
-  <button class="btn-primary" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock Bids</button>
-  <div id="secondaryActions">
-    <button class="btn-ghost" onclick="toggleScoreboard()">📊 Scoreboard</button>
-    <button class="btn-ghost" onclick="showStatistics()">📈 Statistics</button>
-    <button class="btn-ghost" onclick="resetGame()">↺ New Game</button>
-  </div>
-
-  <!-- Scoreboard section -->
-  <div id="scoreboardSection" class="hidden" style="margin-top:16px">
-    <div class="card">
-      <div class="card-label">Scoreboard</div>
-      <div class="scoreboard-wrap">
-        <table id="scoreboardTable"></table>
-      </div>
+  <!-- Fixed footer — action buttons -->
+  <div class="game-footer">
+    <button class="btn-primary" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock Bids</button>
+    <div id="secondaryActions" style="display:flex;gap:6px;margin-top:6px">
+      <button class="btn-ghost" style="margin:0;flex:1" onclick="toggleScoreboard()">📊 Scores</button>
+      <button class="btn-ghost" style="margin:0;flex:1" onclick="showStatistics()">📈 Stats</button>
+      <button class="btn-ghost" style="margin:0;flex:1" onclick="resetGame()">↺ New</button>
     </div>
   </div>
 
@@ -1159,6 +1196,9 @@ function setupRound() {
 
   const container = document.getElementById('scoringInputs');
   container.innerHTML = '';
+
+  // Remove any final standings card from previous game
+  document.getElementById('standingsCard')?.remove();
 
   for (let i = 0; i < gs.players.length; i++) {
     const playerIdx = (firstBidder + i) % gs.players.length;
@@ -1447,8 +1487,9 @@ function lockBids() {
     if (firstTricks) { firstTricks.focus(); firstTricks.select(); }
   }, 120);
 
-  // Scroll to top so round info + player cards are in view
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Scroll the player cards area back to top
+  const scrollArea = document.querySelector('.game-scroll-area');
+  if (scrollArea) scrollArea.scrollTop = 0;
 
   // Hide secondary action buttons until round is submitted
   document.getElementById('secondaryActions').classList.add('hidden');
@@ -1504,7 +1545,8 @@ function submitRound() {
     document.getElementById('scoreboardSection').classList.remove('hidden');
     updateScoreboard();
     setupRound();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const scrollArea = document.querySelector('.game-scroll-area');
+    if (scrollArea) scrollArea.scrollTop = 0;
   }
 }
 
@@ -1547,9 +1589,10 @@ function showFinalResults() {
   const secActions = document.getElementById('secondaryActions');
   if (secActions) secActions.classList.remove('hidden');
 
-  // Final standings card
+  // Final standings card — insert at top of scroll area
   const standCard = document.createElement('div');
   standCard.className = 'card';
+  standCard.id = 'standingsCard';
   standCard.innerHTML = `<div class="card-label" style="color:var(--gold)">Final Standings</div>`;
 
   ranks.forEach(p => {
@@ -1567,8 +1610,9 @@ function showFinalResults() {
     standCard.appendChild(item);
   });
 
-  const gameScreen = document.getElementById('gameScreen');
-  gameScreen.insertBefore(standCard, gameScreen.firstChild);
+  const scrollArea = document.querySelector('.game-scroll-area');
+  scrollArea.insertBefore(standCard, scrollArea.firstChild);
+  scrollArea.scrollTop = 0;
 
   // Show scoreboard
   document.getElementById('scoreboardSection').classList.remove('hidden');
@@ -1863,7 +1907,16 @@ function clearAllStatistics() {
 }
 
 // ═══════════ INIT ═══════════
+function measureFixedTop() {
+  const header = document.querySelector('.app-header');
+  const strip  = document.querySelector('.game-title-strip');
+  const h = (header?.offsetHeight || 0) + (strip?.offsetHeight || 0);
+  document.documentElement.style.setProperty('--fixed-top', h + 'px');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  measureFixedTop();
+  window.addEventListener('resize', measureFixedTop);
   // Radio options
   document.querySelectorAll('.radio-option').forEach(opt => {
     opt.addEventListener('click', () => {
