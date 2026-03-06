@@ -1150,6 +1150,13 @@ function setupRound() {
   const ind = document.getElementById('bidIndicator');
   if (ind) ind.style.display = 'none';
 
+  // Reset round card lock styling
+  const roundCard = document.getElementById('roundInfoCard');
+  if (roundCard) {
+    roundCard.style.borderColor = '';
+    roundCard.style.background  = '';
+  }
+
   const container = document.getElementById('scoringInputs');
   container.innerHTML = '';
 
@@ -1278,25 +1285,33 @@ function onTricksInput(curIdx, nextIdx) {
 
 function updateTotals() {
   const numCards = gs.roundStructure[gs.currentRound];
-  let totalBids = 0, totalTricks = 0;
+  let totalTricks = 0;
 
   gs.players.forEach((_, idx) => {
-    totalBids  += parseInt(document.getElementById(`bid${idx}`)?.value)    || 0;
     totalTricks += parseInt(document.getElementById(`tricks${idx}`)?.value) || 0;
   });
 
-  document.getElementById('totalBids').textContent   = totalBids;
+  // Always update tricks count and tricks warning
   document.getElementById('totalTricks').textContent = totalTricks;
-
-  const bidWarn    = document.getElementById('bidWarning');
   const tricksWarn = document.getElementById('tricksWarning');
-
-  bidWarn.style.display    = (totalBids === numCards)            ? 'flex' : 'none';
   tricksWarn.style.display = (totalTricks > 0 && totalTricks !== numCards) ? 'flex' : 'none';
 
-  // Bid over/under indicator — only shown during bidding phase, when at least one bid entered
+  // Everything below only applies during the bidding phase
+  if (_bidsLocked) return;
+
+  let totalBids = 0;
+  gs.players.forEach((_, idx) => {
+    totalBids += parseInt(document.getElementById(`bid${idx}`)?.value) || 0;
+  });
+
+  document.getElementById('totalBids').textContent = totalBids;
+
+  const bidWarn = document.getElementById('bidWarning');
+  bidWarn.style.display = (totalBids === numCards) ? 'flex' : 'none';
+
+  // Bid over/under indicator
   const indicator = document.getElementById('bidIndicator');
-  if (indicator && !_bidsLocked && totalBids > 0) {
+  if (indicator && totalBids > 0) {
     const diff = totalBids - numCards;
     if (diff > 0) {
       indicator.className = 'bid-indicator over';
@@ -1307,7 +1322,6 @@ function updateTotals() {
       indicator.innerHTML = `▼ Under by ${Math.abs(diff)}`;
       indicator.style.display = 'flex';
     } else {
-      // Exactly equal — hidden (bidWarning handles this case as an error)
       indicator.style.display = 'none';
     }
   } else if (indicator) {
@@ -1406,6 +1420,16 @@ function lockBids() {
     const dn = document.getElementById(`dealerNote${idx}`);
     if (dn) dn.style.display = 'none';
   }
+
+  // Visually lock the round info card
+  const roundCard = document.getElementById('roundInfoCard');
+  if (roundCard) {
+    roundCard.style.borderColor = 'rgba(0,212,170,0.35)';
+    roundCard.style.background  = 'rgba(0,212,170,0.03)';
+  }
+  // Freeze the Bids / Won tile label to just show locked bids
+  const bidsLabel = document.querySelector('#roundInfoCard .info-tile:last-child .label');
+  if (bidsLabel) bidsLabel.textContent = 'Bids 🔒 / Won';
 
   // Hide bid-phase warnings only (keep indicator visible), update phase indicator
   document.getElementById('bidWarning').style.display = 'none';
