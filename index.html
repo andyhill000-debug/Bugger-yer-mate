@@ -968,10 +968,6 @@
         </div>
       </div>
 
-      <div id="bidIndicator" class="bid-indicator"></div>
-      <div class="warn-strip" id="bidWarning">⚠ Total bids cannot equal cards dealt!</div>
-      <div class="warn-strip" id="tricksWarning">⚠ Total tricks must equal cards dealt!</div>
-      <div class="warn-strip amber" id="consecutiveBidWarning" style="display:none"></div>
       <div id="roundActions" class="round-actions">
         <button class="round-action-btn gold" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock bids</button>
       </div>
@@ -1220,20 +1216,15 @@ function setupRound() {
   document.getElementById('dealerName').textContent = gs.players[dealerIdx];
   document.getElementById('totalBids').textContent = '0';
   document.getElementById('totalTricks').textContent = '0';
-  document.getElementById('bidWarning').style.display = 'none';
-  document.getElementById('tricksWarning').style.display = 'none';
-  document.getElementById('consecutiveBidWarning').style.display = 'none';
 
   // Reset to bidding phase
   _bidsLocked = false;
   const actionBtn = document.getElementById('mainActionBtn');
   if (actionBtn) { actionBtn.textContent = '🔒 Lock bids'; actionBtn.className = 'round-action-btn gold'; }
 
-  // Show header game buttons, hide bid indicator, reset confirm btn
+  // Show header game buttons
   document.getElementById('headerScoresBtn').style.display = 'flex';
   document.getElementById('headerNewBtn').style.display = 'flex';
-  const ind = document.getElementById('bidIndicator');
-  if (ind) ind.style.display = 'none';
 
   // Reset round card lock styling
   const roundCard = document.getElementById('roundInfoCard');
@@ -1392,31 +1383,14 @@ function updateTotals() {
   gs.players.forEach((_, idx) => { totalTricks += gs.trickVals[idx] || 0; });
 
   document.getElementById('totalTricks').textContent = totalTricks;
-  const tricksWarn = document.getElementById('tricksWarning');
-  tricksWarn.style.display = (totalTricks > 0 && totalTricks !== numCards) ? 'flex' : 'none';
 
   if (_bidsLocked) return;
 
   let totalBids = 0;
   gs.players.forEach((_, idx) => { totalBids += gs.bidVals[idx] || 0; });
-
   document.getElementById('totalBids').textContent = totalBids;
-  document.getElementById('bidWarning').style.display = (totalBids === numCards) ? 'flex' : 'none';
 
-  // Over/under indicator
-  const indicator = document.getElementById('bidIndicator');
-  if (indicator) {
-    const diff = totalBids - numCards;
-    if (totalBids > 0 && diff !== 0) {
-      indicator.className = diff > 0 ? 'bid-indicator over' : 'bid-indicator under';
-      indicator.innerHTML  = diff > 0 ? `▲ Over by ${diff}` : `▼ Under by ${Math.abs(diff)}`;
-      indicator.style.display = 'flex';
-    } else {
-      indicator.style.display = 'none';
-    }
-  }
-
-  // Dealer forbidden bid
+  // Dealer forbidden bid — shown only in the player card
   const dealerIdx = gs.currentDealerIndex;
   let otherBids = 0;
   gs.players.forEach((_, idx) => { if (idx !== dealerIdx) otherBids += gs.bidVals[idx] || 0; });
@@ -1430,23 +1404,6 @@ function updateTotals() {
     } else {
       dnote.style.display = 'none';
     }
-  }
-
-  // Consecutive bid live warning
-  const consWarn = document.getElementById('consecutiveBidWarning');
-  if (gs.rounds.length >= 2 && consWarn) {
-    let warnMsg = '';
-    for (let idx = 0; idx < gs.players.length; idx++) {
-      const cur = gs.bidVals[idx];
-      const p1  = gs.rounds[gs.rounds.length - 1].bids[idx];
-      const p2  = gs.rounds[gs.rounds.length - 2].bids[idx];
-      if (cur === p1 && cur === p2) {
-        warnMsg = `⚠ ${gs.players[idx]} has bid ${cur} three rounds in a row!`;
-        break;
-      }
-    }
-    consWarn.textContent   = warnMsg;
-    consWarn.style.display = warnMsg ? 'flex' : 'none';
   }
 }
 
@@ -1505,9 +1462,6 @@ function lockBids() {
   }
   const bidsLabel = document.getElementById('bidsWonLabel');
   if (bidsLabel) bidsLabel.textContent = 'Bids 🔒 / Won';
-
-  document.getElementById('bidWarning').style.display = 'none';
-  document.getElementById('consecutiveBidWarning').style.display = 'none';
 
   const actionBtn = document.getElementById('mainActionBtn');
   if (actionBtn) { actionBtn.textContent = '✓ Submit round'; actionBtn.className = 'round-action-btn teal'; }
