@@ -401,7 +401,7 @@
     }
 
     .player-card-name {
-      font-size: 14px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--text);
       white-space: nowrap;
@@ -467,7 +467,7 @@
 
     /* Dealer forbidden note — inline under name */
     .dealer-cannot-note {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--gold);
       background: rgba(201,169,97,0.08);
@@ -967,7 +967,8 @@ let gs = {
   roundStructure: [],
   scores: [],
   dealerIndex: 0,
-  currentDealerIndex: 0
+  currentDealerIndex: 0,
+  tricksOrder: []
 };
 
 let _bidsLocked = false; // tracks whether we're in bidding or tricks phase
@@ -1094,6 +1095,7 @@ function setupRound() {
   const firstBidder = (dealerIdx + 1) % gs.players.length;
 
   gs.currentDealerIndex = dealerIdx;
+  gs.tricksOrder = []; // ordered list of playerIdx values for tricks entry
 
   document.getElementById('roundLabel').textContent = `Round ${roundNum + 1}`;
   document.getElementById('roundProgress').textContent = `of ${gs.roundStructure.length}`;
@@ -1142,6 +1144,8 @@ function setupRound() {
     const nextIdx = i < gs.players.length - 1
       ? (firstBidder + i + 1) % gs.players.length
       : null;
+
+    gs.tricksOrder.push(playerIdx);
 
     div.innerHTML = `
       <div class="player-card-header">
@@ -1198,7 +1202,37 @@ function onBidInput(curIdx, nextIdx) {
 
 function onTricksInput(curIdx, nextIdx) {
   updateTotals();
-  const val = document.getElementById(`tricks${curIdx}`).value;
+
+  // Auto-fill last player when all others have values
+  const order = gs.tricksOrder;
+  const numCards = gs.roundStructure[gs.currentRound];
+  const lastIdx = order[order.length - 1];
+  const lastInput = document.getElementById(`tricks${lastIdx}`);
+
+  if (lastInput && lastInput.value === '') {
+    // Count how many of the non-last players have a value
+    let filledCount = 0;
+    let runningTotal = 0;
+    for (let i = 0; i < order.length - 1; i++) {
+      const v = parseInt(document.getElementById(`tricks${order[i]}`)?.value);
+      if (!isNaN(v)) { filledCount++; runningTotal += v; }
+    }
+    // Once all but last are filled, auto-calculate
+    if (filledCount === order.length - 1) {
+      const autoVal = numCards - runningTotal;
+      if (autoVal >= 0) {
+        lastInput.value = autoVal;
+        lastInput.style.borderColor = 'var(--teal)';
+        updateTotals();
+        // Focus the last input briefly so user can see / correct if needed
+        setTimeout(() => { lastInput.focus(); lastInput.select(); }, 80);
+        return; // don't advance further
+      }
+    }
+  }
+
+  // Normal advance to next tricks field
+  const val = document.getElementById(`tricks${curIdx}`)?.value;
   if (val !== '' && nextIdx !== null) {
     setTimeout(() => {
       const next = document.getElementById(`tricks${nextIdx}`);
