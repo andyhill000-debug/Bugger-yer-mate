@@ -297,41 +297,32 @@
 
     .player-input-row input { flex: 1; }
 
-    .dealer-toggle {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      min-width: 52px;
-      cursor: pointer;
-    }
-
-    .dealer-toggle input[type="radio"] { display: none; }
-
-    .dealer-pip {
-      width: 30px;
-      height: 30px;
-      border-radius: 8px;
-      border: 1.5px solid var(--border);
-      background: #111;
+    /* Single cycling dealer selector */
+    .dealer-cycle-btn {
+      width: 100%;
       display: flex;
       align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      font-size: 14px;
-    }
-
-    .dealer-toggle input:checked + .dealer-pip {
-      border-color: var(--gold);
-      background: rgba(201,169,97,0.2);
-    }
-
-    .dealer-toggle span {
-      font-size: 10px;
+      gap: 10px;
+      background: rgba(201,169,97,0.08);
+      border: 1.5px solid rgba(201,169,97,0.4);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--gold);
+      font-size: 16px;
       font-weight: 700;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s;
+      font-family: inherit;
+    }
+
+    .dealer-cycle-btn:active { background: rgba(201,169,97,0.18); }
+
+    .dealer-cycle-btn span:first-child { font-size: 18px; }
+
+    .dealer-cycle-arrow {
+      margin-left: auto;
+      font-size: 18px;
+      opacity: 0.6;
     }
 
     /* ── Buttons ── */
@@ -923,8 +914,16 @@
   </div>
 
   <div class="card">
-    <div class="card-label">Players <span style="color:var(--text-muted);font-weight:400;font-size:10px">· tap 🎴 to set starting dealer</span></div>
+    <div class="card-label">Players</div>
     <div id="playerNamesInputs"></div>
+    <div id="dealerSelector" style="display:none;margin-top:10px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px">Starting Dealer</div>
+      <button class="dealer-cycle-btn" id="dealerCycleBtn" onclick="cycleDealerSelection()">
+        <span>🎴</span>
+        <span id="dealerCycleName">Player 1</span>
+        <span class="dealer-cycle-arrow">→</span>
+      </button>
+    </div>
   </div>
 
   <button class="btn-primary" onclick="startGame()">▶ Start Game</button>
@@ -1110,46 +1109,51 @@ function confirmDialog(title, body, okLabel, okFn, okClass = '') {
 }
 
 // ═══════════ SETUP UI ═══════════
+let _selectedDealer = 0;
+
 function updatePlayerInputs() {
   const n = parseInt(document.getElementById('numPlayers').value) || 0;
   const container = document.getElementById('playerNamesInputs');
+  const dealerSelector = document.getElementById('dealerSelector');
   container.innerHTML = '';
-  if (n < 3 || n > 6) return;
+
+  if (n < 3 || n > 6) {
+    dealerSelector.style.display = 'none';
+    return;
+  }
+
+  // Clamp selected dealer to valid range
+  if (_selectedDealer >= n) _selectedDealer = 0;
 
   for (let i = 0; i < n; i++) {
     const row = document.createElement('div');
     row.className = 'player-input-row';
-
     const inp = document.createElement('input');
     inp.type = 'text';
     inp.placeholder = `Player ${i + 1}`;
     inp.id = `playerName${i}`;
-
-    const dealerLabel = document.createElement('label');
-    dealerLabel.className = 'dealer-toggle';
-    dealerLabel.title = 'Starting Dealer';
-
-    const radio = document.createElement('input');
-    radio.type = 'radio';
-    radio.name = 'startingDealer';
-    radio.value = i;
-    if (i === 0) radio.checked = true;
-
-    const pip = document.createElement('div');
-    pip.className = 'dealer-pip';
-    pip.textContent = '🎴';
-
-    const span = document.createElement('span');
-    span.textContent = 'Dealer';
-
-    dealerLabel.appendChild(radio);
-    dealerLabel.appendChild(pip);
-    dealerLabel.appendChild(span);
-
+    inp.addEventListener('input', updateDealerLabel);
     row.appendChild(inp);
-    row.appendChild(dealerLabel);
     container.appendChild(row);
   }
+
+  dealerSelector.style.display = 'block';
+  updateDealerLabel();
+}
+
+function updateDealerLabel() {
+  const n = parseInt(document.getElementById('numPlayers').value) || 0;
+  const nameEl = document.getElementById(`playerName${_selectedDealer}`);
+  const name = nameEl?.value.trim() || `Player ${_selectedDealer + 1}`;
+  const btn = document.getElementById('dealerCycleName');
+  if (btn) btn.textContent = name;
+}
+
+function cycleDealerSelection() {
+  const n = parseInt(document.getElementById('numPlayers').value) || 0;
+  if (n < 1) return;
+  _selectedDealer = (_selectedDealer + 1) % n;
+  updateDealerLabel();
 }
 
 // Radio option style toggle
@@ -1180,8 +1184,7 @@ function startGame() {
     gs.players.push((nameEl?.value.trim()) || `Player ${i + 1}`);
   }
 
-  const selDealer = document.querySelector('input[name="startingDealer"]:checked');
-  gs.dealerIndex = selDealer ? parseInt(selDealer.value) : 0;
+  gs.dealerIndex = _selectedDealer;
 
   gs.roundStructure = [];
   for (let i = startCards; i >= 1; i--) gs.roundStructure.push(i);
@@ -1251,11 +1254,17 @@ function setupRound() {
   gs.trickVals = {};
   gs.players.forEach((_, idx) => { gs.bidVals[idx] = 0; gs.trickVals[idx] = 0; });
 
+  // Build tricksOrder in bidding order (for auto-calc logic) but render cards in fixed setup order
   for (let i = 0; i < gs.players.length; i++) {
-    const playerIdx = (firstBidder + i) % gs.players.length;
-    const isDealer  = playerIdx === dealerIdx;
-    const bidPos    = i + 1;
-    const player    = gs.players[playerIdx];
+    gs.tricksOrder.push((firstBidder + i) % gs.players.length);
+  }
+
+  for (let playerIdx = 0; playerIdx < gs.players.length; playerIdx++) {
+    const isDealer = playerIdx === dealerIdx;
+    const player   = gs.players[playerIdx];
+
+    // Bid position: how many steps after the dealer this player bids (1 = first, n = last/dealer)
+    const bidPos = ((playerIdx - firstBidder + gs.players.length) % gs.players.length) + 1;
 
     // Check consecutive bid restriction
     let forbiddenBids = [];
@@ -1264,8 +1273,6 @@ function setupRound() {
       const p2 = gs.rounds[gs.rounds.length - 2].bids[playerIdx];
       if (p1 === p2) forbiddenBids.push(p1);
     }
-
-    gs.tricksOrder.push(playerIdx);
 
     const badge = isDealer
       ? `<span class="badge badge-dealer">🎴 Dealer</span>`
