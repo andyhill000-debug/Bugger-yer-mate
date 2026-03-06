@@ -902,9 +902,11 @@
 
   <!-- Actions -->
   <button class="btn-primary" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock Bids</button>
-  <button class="btn-ghost" onclick="toggleScoreboard()">📊 Scoreboard</button>
-  <button class="btn-ghost" onclick="showStatistics()">📈 Statistics</button>
-  <button class="btn-ghost" onclick="resetGame()">↺ New Game</button>
+  <div id="secondaryActions">
+    <button class="btn-ghost" onclick="toggleScoreboard()">📊 Scoreboard</button>
+    <button class="btn-ghost" onclick="showStatistics()">📈 Statistics</button>
+    <button class="btn-ghost" onclick="resetGame()">↺ New Game</button>
+  </div>
 
   <!-- Scoreboard section -->
   <div id="scoreboardSection" class="hidden" style="margin-top:16px">
@@ -1141,6 +1143,12 @@ function setupRound() {
   if (actionBtn) { actionBtn.textContent = '🔒 Lock Bids'; }
   const pb = document.getElementById('phaseBadge');
   if (pb) { pb.className = 'phase-badge bidding'; pb.textContent = '● Bidding Phase'; }
+
+  // Restore secondary action buttons and hide bid indicator
+  const secActions = document.getElementById('secondaryActions');
+  if (secActions) secActions.classList.remove('hidden');
+  const ind = document.getElementById('bidIndicator');
+  if (ind) ind.style.display = 'none';
 
   const container = document.getElementById('scoringInputs');
   container.innerHTML = '';
@@ -1399,11 +1407,9 @@ function lockBids() {
     if (dn) dn.style.display = 'none';
   }
 
-  // Hide bid-phase warnings and indicator, update phase indicator
+  // Hide bid-phase warnings only (keep indicator visible), update phase indicator
   document.getElementById('bidWarning').style.display = 'none';
   document.getElementById('consecutiveBidWarning').style.display = 'none';
-  const ind = document.getElementById('bidIndicator');
-  if (ind) ind.style.display = 'none';
 
   const pb = document.getElementById('phaseBadge');
   if (pb) { pb.className = 'phase-badge tricks'; pb.textContent = '● Tricks Phase'; }
@@ -1416,6 +1422,12 @@ function lockBids() {
     const firstTricks = document.getElementById(`tricks${firstBidder}`);
     if (firstTricks) { firstTricks.focus(); firstTricks.select(); }
   }, 120);
+
+  // Scroll to top so round info + player cards are in view
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Hide secondary action buttons until round is submitted
+  document.getElementById('secondaryActions').classList.add('hidden');
 
   toast('Bids locked! Enter tricks won.', 'success');
 }
@@ -1501,10 +1513,15 @@ function showFinalResults() {
   document.getElementById('scoringInputs').innerHTML = '';
   document.getElementById('roundInfoCard').innerHTML = `
     <div class="card-label" style="color:var(--gold);margin-bottom:4px">🏆 Game Complete!</div>
-    <p style="color:var(--text-muted);font-size:12px">${gs.roundStructure.length} rounds · ${gs.players.length} players</p>
+    <p style="color:var(--text-muted);font-size:14px">${gs.roundStructure.length} rounds · ${gs.players.length} players</p>
   `;
 
-  document.querySelector('.btn-primary[onclick="submitRound()"]').style.display = 'none';
+  const mainBtn = document.getElementById('mainActionBtn');
+  if (mainBtn) mainBtn.style.display = 'none';
+
+  // Restore secondary buttons (scoreboard, stats, new game) for end screen
+  const secActions = document.getElementById('secondaryActions');
+  if (secActions) secActions.classList.remove('hidden');
 
   // Final standings card
   const standCard = document.createElement('div');
