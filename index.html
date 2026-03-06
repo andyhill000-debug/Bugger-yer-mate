@@ -100,7 +100,7 @@
     .suit-black { color: #ffffff; }
 
     .game-title-strip p {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 500;
       color: var(--text-muted);
       letter-spacing: 0.3px;
@@ -120,7 +120,7 @@
     }
 
     .card-label {
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: 1.5px;
       color: var(--teal);
@@ -133,7 +133,7 @@
 
     .form-group label {
       display: block;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: 1px;
       color: var(--teal);
@@ -188,14 +188,14 @@
     .radio-option input[type="radio"] { display: none; }
 
     .radio-option .opt-title {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text);
       display: block;
     }
 
     .radio-option .opt-sub {
-      font-size: 10px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-top: 2px;
       letter-spacing: 0.3px;
@@ -243,7 +243,7 @@
     }
 
     .dealer-toggle span {
-      font-size: 8px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -256,7 +256,7 @@
       background: var(--teal);
       color: #000;
       font-family: 'DM Sans', sans-serif;
-      font-size: 15px;
+      font-size: 17px;
       font-weight: 700;
       border: none;
       border-radius: 10px;
@@ -277,7 +277,7 @@
       background: transparent;
       color: var(--text-secondary);
       font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 600;
       border: 1.5px solid var(--border);
       border-radius: 10px;
@@ -298,7 +298,7 @@
       background: var(--red);
       color: #fff;
       font-family: 'DM Sans', sans-serif;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       border: none;
       border-radius: 10px;
@@ -327,7 +327,7 @@
     }
 
     .info-tile .label {
-      font-size: 9px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
@@ -336,7 +336,7 @@
     }
 
     .info-tile .value {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 700;
       color: var(--text);
       margin-top: 3px;
@@ -345,9 +345,34 @@
 
     .info-tile .value.teal { color: var(--teal); }
     .info-tile .value.gold { color: var(--gold); }
-    .info-tile .value.big  { font-size: 24px; }
+    .info-tile .value.big  { font-size: 26px; }
 
     /* Cards tile is same as others */
+
+    /* ── Bid over/under indicator ── */
+    .bid-indicator {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 8px;
+      padding: 5px 10px;
+      margin-top: 8px;
+    }
+
+    .bid-indicator.over {
+      background: rgba(0, 200, 80, 0.1);
+      border: 1px solid rgba(0, 200, 80, 0.3);
+      color: #00c850;
+    }
+
+    .bid-indicator.under {
+      background: rgba(224, 82, 82, 0.1);
+      border: 1px solid rgba(224, 82, 82, 0.3);
+      color: #ff8080;
+    }
 
     /* ── Warning strips ── */
     .warn-strip {
@@ -359,7 +384,7 @@
       border-radius: 10px;
       padding: 10px 14px;
       margin-top: 10px;
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 600;
       color: #ff8080;
     }
@@ -419,7 +444,7 @@
 
     .badge {
       display: inline-block;
-      font-size: 9px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.4px;
       text-transform: uppercase;
@@ -430,7 +455,7 @@
 
     .badge-dealer { background: rgba(201,169,97,0.18); color: var(--gold); }
     .badge-bid-order { background: rgba(0,212,170,0.12); color: var(--teal); }
-    .badge-restrict { background: rgba(224,82,82,0.12); color: var(--red); font-size: 9px; }
+    .badge-restrict { background: rgba(224,82,82,0.12); color: var(--red); font-size: 11px; }
 
     /* Bid and tricks inputs side by side */
     .score-fields-row {
@@ -447,7 +472,7 @@
     }
 
     .score-field label {
-      font-size: 9px;
+      font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
@@ -458,7 +483,7 @@
     .score-field input[type="number"] {
       width: 56px;
       text-align: center;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       padding: 6px 4px;
       min-height: 44px;
@@ -467,7 +492,7 @@
 
     /* Dealer forbidden note — inline under name */
     .dealer-cannot-note {
-      font-size: 15px;
+      font-size: 17px;
       font-weight: 700;
       color: var(--gold);
       background: rgba(201,169,97,0.08);
@@ -479,7 +504,7 @@
     }
 
     .restriction-note {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--red);
       background: rgba(224,82,82,0.08);
@@ -496,7 +521,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
       color: var(--teal);
       background: rgba(0,212,170,0.08);
@@ -519,7 +544,7 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       letter-spacing: 0.5px;
       padding: 4px 10px;
@@ -545,14 +570,14 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12px;
+      font-size: 14px;
       min-width: 320px;
     }
 
     th {
       background: rgba(0,212,170,0.12);
       color: var(--teal);
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
@@ -566,7 +591,7 @@
       text-align: center;
       border-bottom: 1px solid #1a1a1a;
       color: var(--text-secondary);
-      font-size: 12px;
+      font-size: 14px;
     }
 
     .total-row td {
@@ -574,12 +599,12 @@
       color: var(--teal);
       background: rgba(0,212,170,0.05);
       border-top: 1px solid rgba(0,212,170,0.2);
-      font-size: 13px;
+      font-size: 15px;
     }
 
     tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
 
-    td .bid-tricks { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+    td .bid-tricks { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
     /* ── Final standings ── */
     .standing-item {
@@ -598,11 +623,11 @@
       background: rgba(201,169,97,0.04);
     }
 
-    .standing-medal { font-size: 22px; min-width: 32px; text-align: center; }
+    .standing-medal { font-size: 24px; min-width: 32px; text-align: center; }
     .standing-info { flex: 1; min-width: 0; }
-    .standing-name { font-size: 14px; font-weight: 700; }
-    .standing-detail { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
-    .standing-score { font-size: 20px; font-weight: 700; color: var(--teal); }
+    .standing-name { font-size: 16px; font-weight: 700; }
+    .standing-detail { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+    .standing-score { font-size: 22px; font-weight: 700; color: var(--teal); }
 
     /* ── Toast ── */
     #toast {
@@ -614,7 +639,7 @@
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 12px 20px;
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text);
       z-index: 9999;
@@ -668,7 +693,7 @@
     }
 
     .modal-title {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 700;
       margin-bottom: 14px;
       color: var(--text);
@@ -689,14 +714,14 @@
     .stats-table th {
       background: rgba(0,212,170,0.08);
       color: var(--teal);
-      font-size: 10px;
+      font-size: 12px;
       letter-spacing: 1px;
       padding: 8px 6px;
     }
 
     .stats-table td {
       padding: 9px 6px;
-      font-size: 12px;
+      font-size: 14px;
       color: var(--text-secondary);
     }
 
@@ -712,7 +737,7 @@
     }
 
     .edit-player-name {
-      font-size: 13px;
+      font-size: 15px;
       font-weight: 700;
       color: var(--teal);
       margin-bottom: 10px;
@@ -728,10 +753,10 @@
 
     /* ── Responsive ── */
     @media (max-width: 360px) {
-      .score-field input[type="number"] { width: 48px; font-size: 18px; }
-      .player-card-name { font-size: 13px; }
+      .score-field input[type="number"] { width: 48px; font-size: 20px; }
+      .player-card-name { font-size: 15px; }
       .round-info-grid { grid-template-columns: repeat(4, 1fr); gap: 4px; }
-      .info-tile .value.big { font-size: 20px; }
+      .info-tile .value.big { font-size: 22px; }
     }
 
     @media (min-width: 480px) {
@@ -863,6 +888,8 @@
         </div>
       </div>
     </div>
+
+    <div id="bidIndicator" class="bid-indicator"></div>
 
     <div class="warn-strip" id="bidWarning">⚠ Total bids cannot equal cards dealt!</div>
     <div class="warn-strip" id="tricksWarning">⚠ Total tricks must equal cards dealt!</div>
@@ -1259,6 +1286,26 @@ function updateTotals() {
   bidWarn.style.display    = (totalBids === numCards)            ? 'flex' : 'none';
   tricksWarn.style.display = (totalTricks > 0 && totalTricks !== numCards) ? 'flex' : 'none';
 
+  // Bid over/under indicator — only shown during bidding phase, when at least one bid entered
+  const indicator = document.getElementById('bidIndicator');
+  if (indicator && !_bidsLocked && totalBids > 0) {
+    const diff = totalBids - numCards;
+    if (diff > 0) {
+      indicator.className = 'bid-indicator over';
+      indicator.innerHTML = `▲ Over by ${diff} — more tricks bid than cards dealt`;
+      indicator.style.display = 'flex';
+    } else if (diff < 0) {
+      indicator.className = 'bid-indicator under';
+      indicator.innerHTML = `▼ Under by ${Math.abs(diff)} — fewer tricks bid than cards dealt`;
+      indicator.style.display = 'flex';
+    } else {
+      // Exactly equal — hidden (bidWarning handles this case as an error)
+      indicator.style.display = 'none';
+    }
+  } else if (indicator) {
+    indicator.style.display = 'none';
+  }
+
   // Dealer forbidden bid
   const dealerIdx = gs.currentDealerIndex;
   let otherBids = 0;
@@ -1352,9 +1399,11 @@ function lockBids() {
     if (dn) dn.style.display = 'none';
   }
 
-  // Hide bid-phase warnings, update phase indicator
+  // Hide bid-phase warnings and indicator, update phase indicator
   document.getElementById('bidWarning').style.display = 'none';
   document.getElementById('consecutiveBidWarning').style.display = 'none';
+  const ind = document.getElementById('bidIndicator');
+  if (ind) ind.style.display = 'none';
 
   const pb = document.getElementById('phaseBadge');
   if (pb) { pb.className = 'phase-badge tricks'; pb.textContent = '● Tricks Phase'; }
