@@ -983,7 +983,6 @@
       <div class="warn-strip" id="tricksWarning">⚠ Total tricks must equal cards dealt!</div>
       <div class="warn-strip amber" id="consecutiveBidWarning" style="display:none"></div>
       <div id="roundActions" class="round-actions">
-        <button class="round-action-btn teal" id="confirmBidBtn" onclick="confirmBid()" style="display:none">✓ Confirm bid</button>
         <button class="round-action-btn gold" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock bids</button>
       </div>
     </div>
@@ -1245,8 +1244,6 @@ function setupRound() {
   document.getElementById('headerNewBtn').style.display = 'flex';
   const ind = document.getElementById('bidIndicator');
   if (ind) ind.style.display = 'none';
-  const confirmBtn = document.getElementById('confirmBidBtn');
-  if (confirmBtn) confirmBtn.style.display = 'none';
 
   // Reset round card lock styling
   const roundCard = document.getElementById('roundInfoCard');
@@ -1347,55 +1344,35 @@ function ordSuffix(n) {
 
 function stepBid(idx, delta) {
   if (_bidsLocked) return;
-  if (idx !== gs.currentBidderIdx) return; // only active player can bid
+  if (idx !== gs.currentBidderIdx) return;
   const numCards = gs.roundStructure[gs.currentRound];
   const newVal = Math.max(0, Math.min(numCards, (gs.bidVals[idx] || 0) + delta));
   gs.bidVals[idx] = newVal;
   document.getElementById(`bidVal${idx}`).textContent = newVal;
   document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
+
+  // First + tap (going from 0 to 1) advances to next player
+  if (delta > 0 && newVal === 1) advanceBidder(idx);
+
   updateTotals();
 }
 
-function confirmBid() {
-  if (_bidsLocked) return;
-  const idx = gs.currentBidderIdx;
-
-  // Mark this player's bid stepper as confirmed/locked
-  const bidStepper = document.getElementById(`bidStepper${idx}`);
-  if (bidStepper) bidStepper.classList.add('locked');
-  document.getElementById(`bidMinus${idx}`)?.classList.add('disabled');
-  document.getElementById(`bidPlus${idx}`)?.classList.add('disabled');
-
-  // Advance to next bidder in sequence
+function advanceBidder(idx) {
   const order = gs.biddingOrder;
   const pos = order.indexOf(idx);
   if (pos < order.length - 1) {
     gs.currentBidderIdx = order[pos + 1];
     activateBidStepper(gs.currentBidderIdx);
-  } else {
-    // All bids confirmed — now user taps Lock Bids
-    gs.currentBidderIdx = -1;
-    document.getElementById('confirmBidBtn').style.display = 'none';
   }
-  updateTotals();
+  // Last player (dealer) — stays active until Lock Bids
 }
 
 function activateBidStepper(idx) {
   const stepper = document.getElementById(`bidStepper${idx}`);
   if (stepper) stepper.classList.remove('locked');
-  // Enable +/− for this player
   document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', (gs.bidVals[idx] || 0) === 0);
   document.getElementById(`bidPlus${idx}`)?.classList.remove('disabled');
-  // Scroll player card into view
   document.getElementById(`pcard${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  // Update confirm button label
-  const btn = document.getElementById('confirmBidBtn');
-  if (btn) {
-    const name = gs.players[idx];
-    const isLast = gs.biddingOrder.indexOf(idx) === gs.biddingOrder.length - 1;
-    btn.textContent = isLast ? `✓ Confirm ${name}'s bid` : `✓ Confirm ${name}'s bid`;
-    btn.style.display = 'block';
-  }
 }
 
 function stepTrick(idx, delta) {
@@ -1533,7 +1510,6 @@ function lockBids() {
 
   document.getElementById('bidWarning').style.display = 'none';
   document.getElementById('consecutiveBidWarning').style.display = 'none';
-  document.getElementById('confirmBidBtn').style.display = 'none';
 
   const actionBtn = document.getElementById('mainActionBtn');
   if (actionBtn) { actionBtn.textContent = '✓ Submit round'; actionBtn.className = 'round-action-btn teal'; }
