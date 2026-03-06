@@ -23,18 +23,20 @@
       --text-secondary: #cccccc;
       --text-muted: #888888;
       --hillfred-black: #1a1a1a;
-      --fixed-top: 0px; /* set by JS after render */
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html { height: 100%; height: 100dvh; }
 
     body {
       font-family: 'DM Sans', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
-      min-height: 100dvh;
-      padding-bottom: env(safe-area-inset-bottom);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
       -webkit-text-size-adjust: 100%;
     }
 
@@ -43,8 +45,7 @@
       background: var(--card);
       border-bottom: 1px solid var(--border);
       padding: 8px 12px;
-      position: sticky;
-      top: 0;
+      flex-shrink: 0;
       z-index: 100;
     }
 
@@ -88,6 +89,7 @@
       border-bottom: 1px solid var(--border);
       padding: 6px 16px 7px;
       text-align: center;
+      flex-shrink: 0;
     }
 
     .game-title-strip h1 {
@@ -108,18 +110,26 @@
       margin-top: 1px;
     }
 
-    /* ── Container ── */
-    .page { max-width: 640px; margin: 0 auto; padding: 10px 10px 80px; }
+    /* ── Container (setup screen) ── */
+    .page {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 10px 10px 40px;
+    }
 
-    /* ── GAME SCREEN: fixed viewport layout ── */
+    /* ── GAME SCREEN: fills remaining height exactly ── */
     #gameScreen {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      height: calc(100dvh - var(--fixed-top));
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 0;
       overflow: hidden;
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
     }
 
     .game-round-bar {
@@ -427,33 +437,29 @@
       color: var(--gold);
     }
 
-    /* ── Scoring grid ── */
-    /* Each player = one horizontal row card, full width */
+    /* ── Scoring grid — stepper layout ── */
     .scoring-grid {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      margin-bottom: 10px;
+      gap: 8px;
+      margin-bottom: 8px;
     }
 
     .player-card {
       background: var(--card);
       border: 1.5px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 10px 12px;
-      transition: border-color 0.2s;
-      display: grid;
-      grid-template-columns: 1fr auto auto;
+      display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .player-card.is-dealer {
-      border-color: rgba(201,169,97,0.45);
-      background: rgba(201,169,97,0.03);
-    }
+    .player-card.is-dealer { border-color: rgba(201,169,97,0.45); background: rgba(201,169,97,0.03); }
+    .player-card.bids-locked { opacity: 0.92; }
 
-    .player-card-header {
+    .player-card-info {
+      flex: 1;
       min-width: 0;
     }
 
@@ -484,91 +490,86 @@
       border-radius: 20px;
       white-space: nowrap;
     }
-
-    .badge-dealer { background: rgba(201,169,97,0.18); color: var(--gold); }
-    .badge-bid-order { background: rgba(0,212,170,0.12); color: var(--teal); }
-    .badge-restrict { background: rgba(224,82,82,0.12); color: var(--red); font-size: 11px; }
-
-    /* Bid and tricks inputs side by side */
-    .score-fields-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
+    .badge-dealer   { background: rgba(201,169,97,0.18); color: var(--gold); }
+    .badge-bid-order{ background: rgba(0,212,170,0.12);  color: var(--teal); }
+    .restriction-note {
+      font-size: 13px; font-weight: 700; color: var(--red);
+      background: rgba(224,82,82,0.08); border: 1px solid rgba(224,82,82,0.2);
+      border-radius: 6px; padding: 2px 7px; white-space: nowrap;
+    }
+    .dealer-cannot-note {
+      font-size: 13px; font-weight: 700; color: var(--gold);
+      background: rgba(201,169,97,0.08); border: 1px solid rgba(201,169,97,0.25);
+      border-radius: 6px; padding: 2px 7px; display: none; white-space: nowrap;
     }
 
-    .score-field {
+    /* Stepper widget */
+    .stepper-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
-    .score-field label {
+    .stepper-label {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.8px;
       text-transform: uppercase;
       color: var(--text-muted);
-      white-space: nowrap;
     }
 
-    .score-field input[type="number"] {
-      width: 56px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: 700;
-      padding: 6px 4px;
-      min-height: 44px;
-      border-radius: 8px;
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: #0d0d0d;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
     }
 
-    /* Dealer forbidden note — inline under name */
-    .dealer-cannot-note {
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--gold);
-      background: rgba(201,169,97,0.08);
-      border: 1px solid rgba(201,169,97,0.25);
-      border-radius: 6px;
-      padding: 3px 8px;
-      display: none;
-      white-space: nowrap;
+    .stepper.locked {
+      border-color: rgba(0,212,170,0.35);
+      background: rgba(0,212,170,0.06);
     }
 
-    .restriction-note {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--red);
-      background: rgba(224,82,82,0.08);
-      border: 1px solid rgba(224,82,82,0.2);
-      border-radius: 6px;
-      padding: 3px 8px;
-      white-space: nowrap;
-    }
-
-    /* ── Bid locked state ── */
-    .bid-locked {
-      width: 56px;
-      min-height: 44px;
+    .stepper-btn {
+      width: 44px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 22px;
-      font-weight: 700;
+      font-weight: 300;
       color: var(--teal);
-      background: rgba(0,212,170,0.08);
-      border: 1.5px solid rgba(0,212,170,0.3);
-      border-radius: 8px;
-      position: relative;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.15s;
+      flex-shrink: 0;
     }
 
-    .bid-locked::after {
-      content: '🔒';
-      font-size: 8px;
-      position: absolute;
-      top: 3px;
-      right: 3px;
-      opacity: 0.6;
+    .stepper-btn:active { background: rgba(0,212,170,0.15); }
+    .stepper-btn.disabled { color: #333; pointer-events: none; }
+
+    .stepper-val {
+      width: 46px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .stepper.locked .stepper-val { color: var(--teal); }
+    .stepper.locked .stepper-btn { color: #333; pointer-events: none; }
+
+    .stepper-pair {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
     }
 
     /* Phase indicator on round card */
@@ -1034,7 +1035,9 @@ let gs = {
   scores: [],
   dealerIndex: 0,
   currentDealerIndex: 0,
-  tricksOrder: []
+  tricksOrder: [],
+  bidVals: {},
+  trickVals: {}
 };
 
 let _bidsLocked = false; // tracks whether we're in bidding or tricks phase
@@ -1149,6 +1152,7 @@ function startGame() {
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
   document.getElementById('scoreboardSection').classList.add('hidden');
+  document.querySelector('.game-title-strip').classList.add('hidden');
 
   setupRound();
 }
@@ -1200,11 +1204,16 @@ function setupRound() {
   // Remove any final standings card from previous game
   document.getElementById('standingsCard')?.remove();
 
+  // State for all stepper values — keyed by playerIdx
+  gs.bidVals   = {};
+  gs.trickVals = {};
+  gs.players.forEach((_, idx) => { gs.bidVals[idx] = 0; gs.trickVals[idx] = 0; });
+
   for (let i = 0; i < gs.players.length; i++) {
     const playerIdx = (firstBidder + i) % gs.players.length;
-    const isDealer = playerIdx === dealerIdx;
-    const bidPos = i + 1;
-    const player = gs.players[playerIdx];
+    const isDealer  = playerIdx === dealerIdx;
+    const bidPos    = i + 1;
+    const player    = gs.players[playerIdx];
 
     // Check consecutive bid restriction
     let forbiddenBids = [];
@@ -1214,52 +1223,47 @@ function setupRound() {
       if (p1 === p2) forbiddenBids.push(p1);
     }
 
-    const div = document.createElement('div');
-    div.className = 'player-card' + (isDealer ? ' is-dealer' : '');
-    div.id = `pcard${playerIdx}`;
+    gs.tricksOrder.push(playerIdx);
 
     const badge = isDealer
       ? `<span class="badge badge-dealer">🎴 Dealer</span>`
       : `<span class="badge badge-bid-order">Bids ${bidPos}${ordSuffix(bidPos)}</span>`;
 
-    // Determine next player for auto-advance
-    const nextIdx = i < gs.players.length - 1
-      ? (firstBidder + i + 1) % gs.players.length
-      : null;
-
-    gs.tricksOrder.push(playerIdx);
-
+    const div = document.createElement('div');
+    div.className = 'player-card' + (isDealer ? ' is-dealer' : '');
+    div.id = `pcard${playerIdx}`;
     div.innerHTML = `
-      <div class="player-card-header">
+      <div class="player-card-info">
         <div class="player-card-name">${player}</div>
         <div class="player-card-meta">
           ${badge}
-          ${forbiddenBids.length ? `<span class="restriction-note">✗ no ${forbiddenBids.join(',')}</span>` : ''}
+          ${forbiddenBids.length ? `<span class="restriction-note">✗ no&nbsp;${forbiddenBids.join(', ')}</span>` : ''}
           ${isDealer ? `<span class="dealer-cannot-note" id="dealerNote${playerIdx}">Can't bid <span id="dealerForbid${playerIdx}"></span></span>` : ''}
         </div>
       </div>
-      <div class="score-fields-row">
-        <div class="score-field">
-          <label>Bid</label>
-          <input type="number" id="bid${playerIdx}" min="0" max="${numCards}"
-                 inputmode="numeric" pattern="[0-9]*"
-                 oninput="onBidInput(${playerIdx}, ${nextIdx})"
-                 onchange="updateTotals()">
+      <div class="stepper-pair">
+        <div class="stepper-group">
+          <div class="stepper-label">Bid</div>
+          <div class="stepper" id="bidStepper${playerIdx}">
+            <div class="stepper-btn disabled" id="bidMinus${playerIdx}" onclick="stepBid(${playerIdx},-1)">−</div>
+            <div class="stepper-val" id="bidVal${playerIdx}">0</div>
+            <div class="stepper-btn" onclick="stepBid(${playerIdx},+1)">+</div>
+          </div>
         </div>
-        <div class="score-field">
-          <label>Won</label>
-          <input type="number" id="tricks${playerIdx}" min="0" max="${numCards}"
-                 inputmode="numeric" pattern="[0-9]*"
-                 oninput="onTricksInput(${playerIdx}, ${nextIdx})"
-                 onchange="updateTotals()">
+        <div class="stepper-group">
+          <div class="stepper-label">Won</div>
+          <div class="stepper locked" id="wonStepper${playerIdx}">
+            <div class="stepper-btn disabled" id="wonMinus${playerIdx}" onclick="stepTrick(${playerIdx},-1)">−</div>
+            <div class="stepper-val" id="wonVal${playerIdx}">0</div>
+            <div class="stepper-btn disabled" id="wonPlus${playerIdx}" onclick="stepTrick(${playerIdx},+1)">+</div>
+          </div>
         </div>
       </div>
     `;
     container.appendChild(div);
   }
 
-  // Auto-focus first bidder
-  setTimeout(() => { document.getElementById(`bid${firstBidder}`)?.focus(); }, 120);
+  updateTotals();
 }
 
 function ordSuffix(n) {
@@ -1270,117 +1274,72 @@ function ordSuffix(n) {
   return 'th';
 }
 
-function onBidInput(curIdx, nextIdx) {
+function stepBid(idx, delta) {
+  if (_bidsLocked) return;
+  const numCards = gs.roundStructure[gs.currentRound];
+  const newVal = Math.max(0, Math.min(numCards, (gs.bidVals[idx] || 0) + delta));
+  gs.bidVals[idx] = newVal;
+  document.getElementById(`bidVal${idx}`).textContent = newVal;
+  // Grey out minus if at 0
+  const minusBtn = document.getElementById(`bidMinus${idx}`);
+  if (minusBtn) minusBtn.classList.toggle('disabled', newVal === 0);
   updateTotals();
-  const val = document.getElementById(`bid${curIdx}`)?.value;
-  // Auto-advance to next player's bid (not into tricks — Lock Bids handles that)
-  if (val !== '' && nextIdx !== null) {
-    setTimeout(() => {
-      const next = document.getElementById(`bid${nextIdx}`);
-      if (next) { next.focus(); next.select(); }
-    }, 160);
-  }
 }
 
-function onTricksInput(curIdx, nextIdx) {
-  updateTotals();
-
-  // Auto-fill last player when all others have values
-  const order = gs.tricksOrder;
+function stepTrick(idx, delta) {
+  if (!_bidsLocked) return;
   const numCards = gs.roundStructure[gs.currentRound];
-  const lastIdx = order[order.length - 1];
-  const lastInput = document.getElementById(`tricks${lastIdx}`);
-
-  if (lastInput && lastInput.value === '') {
-    // Count how many of the non-last players have a value
-    let filledCount = 0;
-    let runningTotal = 0;
-    for (let i = 0; i < order.length - 1; i++) {
-      const v = parseInt(document.getElementById(`tricks${order[i]}`)?.value);
-      if (!isNaN(v)) { filledCount++; runningTotal += v; }
-    }
-    // Once all but last are filled, auto-calculate
-    if (filledCount === order.length - 1) {
-      const autoVal = numCards - runningTotal;
-      if (autoVal >= 0) {
-        lastInput.value = autoVal;
-        lastInput.style.borderColor = 'var(--teal)';
-        updateTotals();
-        // Focus the last input briefly so user can see / correct if needed
-        setTimeout(() => { lastInput.focus(); lastInput.select(); }, 80);
-        return; // don't advance further
-      }
-    }
-  }
-
-  // Normal advance to next tricks field
-  const val = document.getElementById(`tricks${curIdx}`)?.value;
-  if (val !== '' && nextIdx !== null) {
-    setTimeout(() => {
-      const next = document.getElementById(`tricks${nextIdx}`);
-      if (next) { next.focus(); next.select(); }
-    }, 160);
-  }
+  const newVal = Math.max(0, Math.min(numCards, (gs.trickVals[idx] || 0) + delta));
+  gs.trickVals[idx] = newVal;
+  document.getElementById(`wonVal${idx}`).textContent = newVal;
+  const minusBtn = document.getElementById(`wonMinus${idx}`);
+  if (minusBtn) minusBtn.classList.toggle('disabled', newVal === 0);
+  updateTotals();
 }
 
 function updateTotals() {
   const numCards = gs.roundStructure[gs.currentRound];
+  if (!numCards) return;
+
   let totalTricks = 0;
+  gs.players.forEach((_, idx) => { totalTricks += gs.trickVals[idx] || 0; });
 
-  gs.players.forEach((_, idx) => {
-    totalTricks += parseInt(document.getElementById(`tricks${idx}`)?.value) || 0;
-  });
-
-  // Always update tricks count and tricks warning
   document.getElementById('totalTricks').textContent = totalTricks;
   const tricksWarn = document.getElementById('tricksWarning');
   tricksWarn.style.display = (totalTricks > 0 && totalTricks !== numCards) ? 'flex' : 'none';
 
-  // Everything below only applies during the bidding phase
   if (_bidsLocked) return;
 
   let totalBids = 0;
-  gs.players.forEach((_, idx) => {
-    totalBids += parseInt(document.getElementById(`bid${idx}`)?.value) || 0;
-  });
+  gs.players.forEach((_, idx) => { totalBids += gs.bidVals[idx] || 0; });
 
   document.getElementById('totalBids').textContent = totalBids;
+  document.getElementById('bidWarning').style.display = (totalBids === numCards) ? 'flex' : 'none';
 
-  const bidWarn = document.getElementById('bidWarning');
-  bidWarn.style.display = (totalBids === numCards) ? 'flex' : 'none';
-
-  // Bid over/under indicator
+  // Over/under indicator
   const indicator = document.getElementById('bidIndicator');
-  if (indicator && totalBids > 0) {
+  if (indicator) {
     const diff = totalBids - numCards;
-    if (diff > 0) {
-      indicator.className = 'bid-indicator over';
-      indicator.innerHTML = `▲ Over by ${diff}`;
-      indicator.style.display = 'flex';
-    } else if (diff < 0) {
-      indicator.className = 'bid-indicator under';
-      indicator.innerHTML = `▼ Under by ${Math.abs(diff)}`;
+    if (totalBids > 0 && diff !== 0) {
+      indicator.className = diff > 0 ? 'bid-indicator over' : 'bid-indicator under';
+      indicator.innerHTML  = diff > 0 ? `▲ Over by ${diff}` : `▼ Under by ${Math.abs(diff)}`;
       indicator.style.display = 'flex';
     } else {
       indicator.style.display = 'none';
     }
-  } else if (indicator) {
-    indicator.style.display = 'none';
   }
 
   // Dealer forbidden bid
   const dealerIdx = gs.currentDealerIndex;
   let otherBids = 0;
-  gs.players.forEach((_, idx) => {
-    if (idx !== dealerIdx) otherBids += parseInt(document.getElementById(`bid${idx}`)?.value) || 0;
-  });
-  const forbiddenBid = numCards - otherBids;
-  const dnote = document.getElementById(`dealerNote${dealerIdx}`);
+  gs.players.forEach((_, idx) => { if (idx !== dealerIdx) otherBids += gs.bidVals[idx] || 0; });
+  const forbidden = numCards - otherBids;
+  const dnote   = document.getElementById(`dealerNote${dealerIdx}`);
   const dforbid = document.getElementById(`dealerForbid${dealerIdx}`);
   if (dnote && dforbid) {
-    if (forbiddenBid >= 0 && forbiddenBid <= numCards) {
-      dforbid.textContent = `${forbiddenBid} (total would = ${numCards})`;
-      dnote.style.display = 'block';
+    if (forbidden >= 0 && forbidden <= numCards) {
+      dforbid.textContent = forbidden;
+      dnote.style.display = 'inline';
     } else {
       dnote.style.display = 'none';
     }
@@ -1388,24 +1347,19 @@ function updateTotals() {
 
   // Consecutive bid live warning
   const consWarn = document.getElementById('consecutiveBidWarning');
-  if (gs.rounds.length >= 2) {
+  if (gs.rounds.length >= 2 && consWarn) {
     let warnMsg = '';
     for (let idx = 0; idx < gs.players.length; idx++) {
-      const cur = parseInt(document.getElementById(`bid${idx}`)?.value);
-      if (isNaN(cur)) continue;
-      const p1 = gs.rounds[gs.rounds.length - 1].bids[idx];
-      const p2 = gs.rounds[gs.rounds.length - 2].bids[idx];
+      const cur = gs.bidVals[idx];
+      const p1  = gs.rounds[gs.rounds.length - 1].bids[idx];
+      const p2  = gs.rounds[gs.rounds.length - 2].bids[idx];
       if (cur === p1 && cur === p2) {
         warnMsg = `⚠ ${gs.players[idx]} has bid ${cur} three rounds in a row!`;
         break;
       }
     }
-    if (warnMsg) {
-      consWarn.textContent = warnMsg;
-      consWarn.style.display = 'flex';
-    } else {
-      consWarn.style.display = 'none';
-    }
+    consWarn.textContent   = warnMsg;
+    consWarn.style.display = warnMsg ? 'flex' : 'none';
   }
 }
 
@@ -1419,17 +1373,11 @@ function handleMainAction() {
 
 function lockBids() {
   const numCards = gs.roundStructure[gs.currentRound];
-  const firstBidder = (gs.currentDealerIndex + 1) % gs.players.length;
 
-  // Validate all bids entered
+  // Validate — all bids are already set (default 0 is a valid bid)
   let totalBids = 0;
-  const bids = [];
-  for (let idx = 0; idx < gs.players.length; idx++) {
-    const b = parseInt(document.getElementById(`bid${idx}`)?.value);
-    if (isNaN(b)) { toast('Enter all bids first', 'error'); return; }
-    bids.push(b);
-    totalBids += b;
-  }
+  const bids = gs.players.map((_, idx) => gs.bidVals[idx] || 0);
+  bids.forEach(b => totalBids += b);
 
   if (totalBids === numCards) { toast('Total bids cannot equal cards dealt', 'error'); return; }
 
@@ -1444,22 +1392,23 @@ function lockBids() {
     }
   }
 
-  // Lock all bid inputs — replace with styled display chip
   _bidsLocked = true;
-  for (let idx = 0; idx < gs.players.length; idx++) {
-    const bidInput = document.getElementById(`bid${idx}`);
-    if (bidInput) {
-      const val = bidInput.value;
-      const locked = document.createElement('div');
-      locked.className = 'bid-locked';
-      locked.textContent = val;
-      locked.id = `bidLocked${idx}`;
-      bidInput.parentNode.replaceChild(locked, bidInput);
-    }
-    // Hide dealer/restriction notes — no longer relevant
+
+  // Lock bid steppers visually, enable won steppers
+  gs.players.forEach((_, idx) => {
+    const bidStepper = document.getElementById(`bidStepper${idx}`);
+    if (bidStepper) bidStepper.classList.add('locked');
+    const wonStepper = document.getElementById(`wonStepper${idx}`);
+    if (wonStepper) wonStepper.classList.remove('locked');
+    // Enable won +/- buttons
+    const wonPlus  = document.getElementById(`wonPlus${idx}`);
+    const wonMinus = document.getElementById(`wonMinus${idx}`);
+    if (wonPlus)  wonPlus.classList.remove('disabled');
+    if (wonMinus) wonMinus.classList.remove('disabled');
+    // Hide dealer/restriction notes
     const dn = document.getElementById(`dealerNote${idx}`);
     if (dn) dn.style.display = 'none';
-  }
+  });
 
   // Visually lock the round info card
   const roundCard = document.getElementById('roundInfoCard');
@@ -1467,11 +1416,9 @@ function lockBids() {
     roundCard.style.borderColor = 'rgba(0,212,170,0.35)';
     roundCard.style.background  = 'rgba(0,212,170,0.03)';
   }
-  // Freeze the Bids / Won tile label to just show locked bids
-  const bidsLabel = document.querySelector('#roundInfoCard .info-tile:last-child .label');
+  const bidsLabel = document.getElementById('bidsWonLabel');
   if (bidsLabel) bidsLabel.textContent = 'Bids 🔒 / Won';
 
-  // Hide bid-phase warnings only (keep indicator visible), update phase indicator
   document.getElementById('bidWarning').style.display = 'none';
   document.getElementById('consecutiveBidWarning').style.display = 'none';
 
@@ -1479,19 +1426,8 @@ function lockBids() {
   if (pb) { pb.className = 'phase-badge tricks'; pb.textContent = '● Tricks Phase'; }
 
   const actionBtn = document.getElementById('mainActionBtn');
-  if (actionBtn) { actionBtn.textContent = '✓ Submit Round'; }
+  if (actionBtn) actionBtn.textContent = '✓ Submit Round';
 
-  // Focus first tricks input (in bidding order: player after dealer)
-  setTimeout(() => {
-    const firstTricks = document.getElementById(`tricks${firstBidder}`);
-    if (firstTricks) { firstTricks.focus(); firstTricks.select(); }
-  }, 120);
-
-  // Scroll the player cards area back to top
-  const scrollArea = document.querySelector('.game-scroll-area');
-  if (scrollArea) scrollArea.scrollTop = 0;
-
-  // Hide secondary action buttons until round is submitted
   document.getElementById('secondaryActions').classList.add('hidden');
 
   toast('Bids locked! Enter tricks won.', 'success');
@@ -1500,26 +1436,13 @@ function lockBids() {
 function submitRound() {
   const numCards = gs.roundStructure[gs.currentRound];
 
-  // Read locked bid values from the display chips
-  const bids = [];
-  for (let idx = 0; idx < gs.players.length; idx++) {
-    const chip = document.getElementById(`bidLocked${idx}`);
-    const b = chip ? parseInt(chip.textContent) : NaN;
-    if (isNaN(b)) { toast('Bids not locked — tap Lock Bids first', 'error'); return; }
-    bids.push(b);
-  }
+  const bids   = gs.players.map((_, idx) => gs.bidVals[idx]   || 0);
+  const tricks = gs.players.map((_, idx) => gs.trickVals[idx] || 0);
+  const totalTricks = tricks.reduce((a, b) => a + b, 0);
 
-  // Validate tricks
-  let totalTricks = 0;
-  const tricks = [];
-  for (let idx = 0; idx < gs.players.length; idx++) {
-    const t = parseInt(document.getElementById(`tricks${idx}`)?.value);
-    if (isNaN(t)) { toast('Fill in tricks won for all players', 'error'); return; }
-    tricks.push(t);
-    totalTricks += t;
+  if (totalTricks !== numCards) {
+    toast(`Tricks must total ${numCards} — currently ${totalTricks}`, 'error'); return;
   }
-
-  if (totalTricks !== numCards) { toast(`Tricks must total ${numCards} (currently ${totalTricks})`, 'error'); return; }
 
   const trump = TRUMP_SUITS[gs.currentRound % TRUMP_SUITS.length];
   const roundData = {
@@ -1751,6 +1674,7 @@ function doRestoreGame() {
   closeModal('restoreModal');
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
+  document.querySelector('.game-title-strip').classList.add('hidden');
   document.getElementById('scoreboardSection').classList.remove('hidden');
   updateScoreboard();
   setupRound();
@@ -1907,16 +1831,7 @@ function clearAllStatistics() {
 }
 
 // ═══════════ INIT ═══════════
-function measureFixedTop() {
-  const header = document.querySelector('.app-header');
-  const strip  = document.querySelector('.game-title-strip');
-  const h = (header?.offsetHeight || 0) + (strip?.offsetHeight || 0);
-  document.documentElement.style.setProperty('--fixed-top', h + 'px');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  measureFixedTop();
-  window.addEventListener('resize', measureFixedTop);
   // Radio options
   document.querySelectorAll('.radio-option').forEach(opt => {
     opt.addEventListener('click', () => {
