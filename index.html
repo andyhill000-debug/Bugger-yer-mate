@@ -989,6 +989,7 @@
 
   <!-- Fixed footer — action buttons -->
   <div class="game-footer">
+    <button class="btn-primary" id="confirmBidBtn" onclick="confirmBid()" style="display:none;margin-bottom:6px;background:var(--teal)">✓ Confirm Bid</button>
     <button class="btn-primary" id="mainActionBtn" onclick="handleMainAction()">🔒 Lock Bids</button>
     <div id="secondaryActions" style="display:flex;gap:6px;margin-top:6px">
       <button class="btn-ghost" style="margin:0;flex:1" onclick="toggleScoreboard()">📊 Scores</button>
@@ -1235,6 +1236,8 @@ function setupRound() {
   if (secActions) secActions.classList.remove('hidden');
   const ind = document.getElementById('bidIndicator');
   if (ind) ind.style.display = 'none';
+  const confirmBtn = document.getElementById('confirmBidBtn');
+  if (confirmBtn) confirmBtn.style.display = 'none';
 
   // Reset round card lock styling
   const roundCard = document.getElementById('roundInfoCard');
@@ -1254,10 +1257,14 @@ function setupRound() {
   gs.trickVals = {};
   gs.players.forEach((_, idx) => { gs.bidVals[idx] = 0; gs.trickVals[idx] = 0; });
 
-  // Build tricksOrder in bidding order (for auto-calc logic) but render cards in fixed setup order
+  // Build bidding order (fixed setup order) and tricks order
+  gs.biddingOrder = [];
+  gs.tricksOrder  = [];
   for (let i = 0; i < gs.players.length; i++) {
+    gs.biddingOrder.push((firstBidder + i) % gs.players.length);
     gs.tricksOrder.push((firstBidder + i) % gs.players.length);
   }
+  gs.currentBidderIdx = gs.biddingOrder[0];
 
   for (let playerIdx = 0; playerIdx < gs.players.length; playerIdx++) {
     const isDealer = playerIdx === dealerIdx;
@@ -1293,10 +1300,10 @@ function setupRound() {
           <div class="stepper-pair">
             <div class="stepper-group">
               <div class="stepper-label">Bid</div>
-              <div class="stepper" id="bidStepper${playerIdx}">
+              <div class="stepper locked" id="bidStepper${playerIdx}">
                 <div class="stepper-btn disabled" id="bidMinus${playerIdx}" onclick="stepBid(${playerIdx},-1)">−</div>
                 <div class="stepper-val" id="bidVal${playerIdx}">0</div>
-                <div class="stepper-btn" onclick="stepBid(${playerIdx},+1)">+</div>
+                <div class="stepper-btn disabled" id="bidPlus${playerIdx}" onclick="stepBid(${playerIdx},+1)">+</div>
               </div>
             </div>
             <div class="stepper-group">
@@ -1316,6 +1323,8 @@ function setupRound() {
     container.appendChild(div);
   }
 
+  // Activate only the first bidder
+  activateBidStepper(gs.currentBidderIdx);
   updateTotals();
 }
 
@@ -1329,14 +1338,55 @@ function ordSuffix(n) {
 
 function stepBid(idx, delta) {
   if (_bidsLocked) return;
+  if (idx !== gs.currentBidderIdx) return; // only active player can bid
   const numCards = gs.roundStructure[gs.currentRound];
   const newVal = Math.max(0, Math.min(numCards, (gs.bidVals[idx] || 0) + delta));
   gs.bidVals[idx] = newVal;
   document.getElementById(`bidVal${idx}`).textContent = newVal;
-  // Grey out minus if at 0
-  const minusBtn = document.getElementById(`bidMinus${idx}`);
-  if (minusBtn) minusBtn.classList.toggle('disabled', newVal === 0);
+  document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
   updateTotals();
+}
+
+function confirmBid() {
+  if (_bidsLocked) return;
+  const idx = gs.currentBidderIdx;
+
+  // Mark this player's bid stepper as confirmed/locked
+  const bidStepper = document.getElementById(`bidStepper${idx}`);
+  if (bidStepper) bidStepper.classList.add('locked');
+  document.getElementById(`bidMinus${idx}`)?.classList.add('disabled');
+  document.getElementById(`bidPlus${idx}`)?.classList.add('disabled');
+
+  // Advance to next bidder in sequence
+  const order = gs.biddingOrder;
+  const pos = order.indexOf(idx);
+  if (pos < order.length - 1) {
+    gs.currentBidderIdx = order[pos + 1];
+    activateBidStepper(gs.currentBidderIdx);
+  } else {
+    // All bids confirmed — now user taps Lock Bids
+    gs.currentBidderIdx = -1;
+    document.getElementById('confirmBidBtn').style.display = 'none';
+  }
+  updateTotals();
+}
+
+function activateBidStepper(idx) {
+  const stepper = document.getElementById(`bidStepper${idx}`);
+  if (stepper) stepper.classList.remove('locked');
+  // Enable +/− for this player
+  document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', (gs.bidVals[idx] || 0) === 0);
+  document.getElementById(`bidPlus${idx}`)?.classList.remove('disabled');
+  // Scroll player card into view
+  document.getElementById(`pcard${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Update confirm button label
+  const btn = document.getElementById('confirmBidBtn');
+  if (btn) {
+    const name = gs.players[idx];
+    const isLast = gs.biddingOrder.indexOf(idx) === gs.biddingOrder.length - 1;
+    btn.textContent = isLast ? `✓ Confirm ${name}'s bid` : `✓ Confirm ${name}'s bid`;
+    btn.style.display = 'block';
+  }
 }
 
 function stepTrick(idx, delta) {
@@ -1474,6 +1524,7 @@ function lockBids() {
 
   document.getElementById('bidWarning').style.display = 'none';
   document.getElementById('consecutiveBidWarning').style.display = 'none';
+  document.getElementById('confirmBidBtn').style.display = 'none';
 
   const pb = document.getElementById('phaseBadge');
   if (pb) { pb.className = 'phase-badge tricks'; pb.textContent = '● Tricks Phase'; }
