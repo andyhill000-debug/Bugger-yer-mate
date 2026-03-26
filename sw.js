@@ -1,7 +1,7 @@
 // Bugger Yer Mate — Service Worker
 // Caches the app shell for full offline use
 
-const CACHE_NAME = 'bym-v1';
+const CACHE_NAME = 'bym-v2';
 const ASSETS = [
   './index.html',
   './manifest.json'

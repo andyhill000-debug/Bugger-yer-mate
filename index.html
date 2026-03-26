@@ -519,6 +519,12 @@
     }
     .badge-dealer   { background: rgba(201,169,97,0.18); color: var(--gold); }
     .badge-bid-order{ background: rgba(0,212,170,0.12);  color: var(--teal); }
+    .player-running-score {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+    }
     .restriction-note {
       font-size: 13px; font-weight: 700; color: var(--red);
       background: rgba(224,82,82,0.08); border: 1px solid rgba(224,82,82,0.2);
@@ -590,8 +596,12 @@
       flex-shrink: 0;
     }
 
-    .stepper.locked .stepper-val { color: var(--teal); }
-    .stepper.locked .stepper-btn { color: #333; pointer-events: none; }
+    .stepper.bid-confirmed {
+      border-color: rgba(0,212,170,0.4);
+    }
+    .stepper.bid-confirmed .stepper-val {
+      color: var(--teal);
+    }
 
     .stepper-pair {
       display: flex;
@@ -865,6 +875,7 @@
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="headerScoresBtn" onclick="toggleScoreboard()" title="Scores" style="display:none">📊</button>
+      <button class="icon-btn" id="headerUndoBtn" onclick="undoLastRound()" title="Undo Last Round" style="display:none">↩</button>
       <button class="icon-btn" id="headerNewBtn" onclick="resetGame()" title="New Game" style="display:none">↺</button>
       <div class="icon-btn" onclick="importStatisticsFromHeader()" title="Import Stats">⬆</div>
       <div class="icon-btn" onclick="showStatistics()" title="Statistics">📈</div>
@@ -1004,6 +1015,8 @@
     <div class="scoreboard-wrap">
       <table class="stats-table" id="statsTableEl"></table>
     </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin:16px 0 8px">Recent Games</div>
+    <div id="gameHistoryContent"></div>
     <div class="modal-actions" style="margin-top:16px">
       <button class="btn-ghost" onclick="exportStatistics()">⬇ Export</button>
       <button class="btn-ghost" onclick="importStatistics()">⬆ Import</button>
@@ -1039,6 +1052,16 @@
   </div>
 </div>
 
+<!-- Round summary modal -->
+<div id="roundSummaryModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('roundSummaryModal')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="roundSummaryTitle">Round Summary</div>
+    <div id="roundSummaryContent"></div>
+    <button class="btn-primary" style="margin-top:12px" onclick="closeModal('roundSummaryModal')">Next Round →</button>
+  </div>
+</div>
+
 <!-- Edit round modal -->
 <div id="editModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal('editModal')">
   <div class="modal-sheet">
@@ -1062,7 +1085,72 @@ const TRUMP_SUITS = [
   { name: 'No Trumps',icon: 'NT', color: '#00d4aa' }
 ];
 
-// ═══════════ STATE ═══════════
+// ═══════════ HAPTIC ═══════════
+function haptic(style = 'light') {
+  try {
+    if (navigator.vibrate) {
+      navigator.vibrate(style === 'heavy' ? 30 : style === 'medium' ? 15 : 8);
+    }
+    // iOS Haptic Feedback via Audio Context (silent pulse)
+    if (window.AudioContext || window.webkitAudioContext) {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.001);
+    }
+  } catch(e) {}
+}
+
+// ═══════════ SETUP MEMORY ═══════════
+function saveSetupMemory() {
+  try {
+    const n = parseInt(document.getElementById('numPlayers').value) || 0;
+    const names = [];
+    for (let i = 0; i < n; i++) {
+      names.push(document.getElementById(`playerName${i}`)?.value.trim() || '');
+    }
+    localStorage.setItem('bymSetup', JSON.stringify({
+      numPlayers: n,
+      startCards: document.getElementById('startCards').value,
+      roundType: document.querySelector('input[name="roundType"]:checked')?.value || 'down',
+      names,
+      dealer: _selectedDealer
+    }));
+  } catch(e) {}
+}
+
+function loadSetupMemory() {
+  try {
+    const raw = localStorage.getItem('bymSetup');
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.numPlayers) {
+      document.getElementById('numPlayers').value = s.numPlayers;
+      updatePlayerInputs();
+    }
+    if (s.startCards) document.getElementById('startCards').value = s.startCards;
+    if (s.roundType) {
+      const radio = document.querySelector(`input[name="roundType"][value="${s.roundType}"]`);
+      if (radio) {
+        radio.checked = true;
+        document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+        radio.closest('.radio-option')?.classList.add('selected');
+      }
+    }
+    if (s.names) {
+      s.names.forEach((name, i) => {
+        const el = document.getElementById(`playerName${i}`);
+        if (el && name) el.value = name;
+      });
+    }
+    if (typeof s.dealer === 'number') {
+      _selectedDealer = s.dealer;
+      updateDealerLabel();
+    }
+  } catch(e) {}
+}
 let gs = {
   players: [],
   rounds: [],
@@ -1189,12 +1277,15 @@ function startGame() {
   gs.rounds = [];
   gs.currentRound = 0;
 
+  saveSetupMemory();
+
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
   document.getElementById('scoreboardSection').classList.add('hidden');
   document.querySelector('.game-title-strip').classList.add('hidden');
   document.getElementById('headerScoresBtn').style.display = 'flex';
   document.getElementById('headerNewBtn').style.display = 'flex';
+  document.getElementById('headerUndoBtn').style.display = 'none';
 
   setupRound();
 }
@@ -1212,7 +1303,7 @@ function setupRound() {
   document.getElementById('roundLabel').textContent = `Round ${roundNum + 1}`;
   document.getElementById('roundProgress').textContent = `of ${gs.roundStructure.length}`;
   document.getElementById('currentCards').textContent = numCards;
-  document.getElementById('trumpSuit').innerHTML = `<span style="color:${trump.color}">${trump.icon} ${trump.name.replace('No Trumps','NT')}</span>`;
+  document.getElementById('trumpSuit').innerHTML = `<span style="color:${trump.color};font-size:20px">${trump.icon}</span><span style="font-size:15px"> ${trump.name.replace('No Trumps','NT')}</span>`;
   document.getElementById('dealerName').textContent = gs.players[dealerIdx];
   document.getElementById('totalBids').textContent = '0';
   document.getElementById('totalTricks').textContent = '0';
@@ -1282,6 +1373,7 @@ function setupRound() {
             <div class="player-card-name">${player}</div>
             <div class="player-card-meta">
               ${badge}
+              <span class="player-running-score" id="runScore${playerIdx}">${gs.scores[playerIdx] > 0 ? gs.scores[playerIdx] + ' pts' : ''}</span>
             </div>
           </div>
           <div class="stepper-pair">
@@ -1325,12 +1417,12 @@ function ordSuffix(n) {
 
 function stepBid(idx, delta) {
   if (_bidsLocked) return;
-  // Allow editing if this player is the current bidder OR has already been unlocked (bid > 0 and next player is active)
   const order = gs.biddingOrder;
   const myPos = order.indexOf(idx);
   const currentPos = order.indexOf(gs.currentBidderIdx);
-  if (myPos > currentPos) return; // not yet unlocked
+  if (myPos > currentPos) return;
 
+  haptic('light');
   const numCards = gs.roundStructure[gs.currentRound];
   const oldVal = gs.bidVals[idx] || 0;
   const newVal = Math.max(0, Math.min(numCards, oldVal + delta));
@@ -1338,8 +1430,11 @@ function stepBid(idx, delta) {
   document.getElementById(`bidVal${idx}`).textContent = newVal;
   document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
 
-  // First + tap advances to next player (but current player stays editable)
-  if (delta > 0 && oldVal === 0 && newVal === 1 && idx === gs.currentBidderIdx) {
+  // Mark stepper as confirmed (teal border) once player has interacted
+  document.getElementById(`bidStepper${idx}`)?.classList.add('bid-confirmed');
+
+  // First + tap advances to next player
+  if (delta > 0 && oldVal === 0 && idx === gs.currentBidderIdx) {
     advanceBidder(idx);
   }
 
@@ -1366,13 +1461,39 @@ function activateBidStepper(idx) {
 
 function stepTrick(idx, delta) {
   if (!_bidsLocked) return;
+  haptic('light');
   const numCards = gs.roundStructure[gs.currentRound];
   const newVal = Math.max(0, Math.min(numCards, (gs.trickVals[idx] || 0) + delta));
   gs.trickVals[idx] = newVal;
   document.getElementById(`wonVal${idx}`).textContent = newVal;
-  const minusBtn = document.getElementById(`wonMinus${idx}`);
-  if (minusBtn) minusBtn.classList.toggle('disabled', newVal === 0);
+  document.getElementById(`wonMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
+
+  // Auto-complete last player's tricks when all others are set
+  autoCompleteTricks();
   updateTotals();
+}
+
+function autoCompleteTricks() {
+  const numCards = gs.roundStructure[gs.currentRound];
+  const order = gs.tricksOrder;
+  const lastIdx = order[order.length - 1];
+
+  // Sum all but last player
+  let filledCount = 0, total = 0;
+  for (let i = 0; i < order.length - 1; i++) {
+    const v = gs.trickVals[order[i]];
+    if (v !== undefined && v !== null) { filledCount++; total += v; }
+  }
+
+  if (filledCount === order.length - 1) {
+    const remaining = numCards - total;
+    if (remaining >= 0 && remaining <= numCards) {
+      gs.trickVals[lastIdx] = remaining;
+      document.getElementById(`wonVal${lastIdx}`).textContent = remaining;
+      document.getElementById(`wonMinus${lastIdx}`)?.classList.toggle('disabled', remaining === 0);
+      haptic('medium');
+    }
+  }
 }
 
 function updateTotals() {
@@ -1437,6 +1558,7 @@ function lockBids() {
   }
 
   _bidsLocked = true;
+  haptic('medium');
 
   // Lock bid steppers visually, enable won steppers
   gs.players.forEach((_, idx) => {
@@ -1494,19 +1616,79 @@ function submitRound() {
   gs.currentRound++;
 
   saveGameState();
+  haptic('heavy');
+  document.getElementById('headerUndoBtn').style.display = 'flex';
 
   if (gs.currentRound >= gs.roundStructure.length) {
     recordGameResults();
     clearSavedGame();
     showFinalResults();
   } else {
-    toast(`Round ${gs.currentRound} recorded!`, 'success');
+    showRoundSummary(roundData, gs.currentRound);
+  }
+}
+
+function showRoundSummary(roundData, nextRoundNum) {
+  const title = document.getElementById('roundSummaryTitle');
+  const content = document.getElementById('roundSummaryContent');
+  title.textContent = `Round ${nextRoundNum} Complete`;
+
+  let html = '';
+  gs.players.forEach((name, idx) => {
+    const bid = roundData.bids[idx];
+    const won = roundData.tricks[idx];
+    const pts = roundData.points[idx];
+    const made = bid === won;
+    const colour = made ? 'var(--teal)' : 'var(--red)';
+    const icon = made ? '✓' : '✗';
+    html += `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-weight:700;font-size:15px">${name}</div>
+          <div style="font-size:13px;color:var(--text-muted)">Bid ${bid} · Won ${won}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:18px;font-weight:700;color:${colour}">${icon} +${pts}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${gs.scores[idx]} total</div>
+        </div>
+      </div>`;
+  });
+  content.innerHTML = html;
+
+  openModal('roundSummaryModal');
+
+  // Wire up "Next Round" to proceed
+  const btn = document.querySelector('#roundSummaryModal .btn-primary');
+  btn.onclick = () => {
+    closeModal('roundSummaryModal');
     document.getElementById('scoreboardSection').classList.remove('hidden');
     updateScoreboard();
     setupRound();
-    const scrollArea = document.querySelector('.game-scroll-area');
-    if (scrollArea) scrollArea.scrollTop = 0;
-  }
+    document.querySelector('.game-scroll-area').scrollTop = 0;
+  };
+}
+
+function undoLastRound() {
+  if (!gs.rounds.length) { toast('Nothing to undo', 'warning'); return; }
+  confirmDialog(
+    'Undo Last Round?',
+    `This will remove Round ${gs.rounds.length} and restore all scores.`,
+    'Undo',
+    () => {
+      const last = gs.rounds.pop();
+      last.points.forEach((pts, i) => { gs.scores[i] -= pts; });
+      gs.currentRound--;
+      saveGameState();
+      haptic('medium');
+      document.getElementById('scoreboardSection').classList.remove('hidden');
+      updateScoreboard();
+      setupRound();
+      document.querySelector('.game-scroll-area').scrollTop = 0;
+      // Hide undo if no rounds left
+      if (!gs.rounds.length) document.getElementById('headerUndoBtn').style.display = 'none';
+      toast('Round undone', 'success');
+    }
+  );
 }
 
 function showFinalResults() {
@@ -1708,6 +1890,9 @@ function doRestoreGame() {
   document.getElementById('setupScreen').classList.add('hidden');
   document.getElementById('gameScreen').classList.remove('hidden');
   document.querySelector('.game-title-strip').classList.add('hidden');
+  document.getElementById('headerScoresBtn').style.display = 'flex';
+  document.getElementById('headerNewBtn').style.display = 'flex';
+  if (gs.rounds.length > 0) document.getElementById('headerUndoBtn').style.display = 'flex';
   document.getElementById('scoreboardSection').classList.remove('hidden');
   updateScoreboard();
   setupRound();
@@ -1752,15 +1937,25 @@ function recordGameResults() {
   const stats = loadStats();
   const maxScore = Math.max(...gs.scores);
   const winnerIndices = gs.scores.map((s, i) => s === maxScore ? i : -1).filter(i => i !== -1);
+  const gameDate = new Date().toISOString();
 
   gs.players.forEach((name, idx) => {
-    if (!stats[name]) stats[name] = { gamesPlayed: 0, wins: 0, totalScore: 0, totalRounds: 0, highestScore: 0 };
+    if (!stats[name]) stats[name] = { gamesPlayed: 0, wins: 0, totalScore: 0, totalRounds: 0, highestScore: 0, history: [] };
     const p = stats[name];
     p.gamesPlayed++;
     p.totalScore += gs.scores[idx];
     p.totalRounds += gs.rounds.length;
     if (gs.scores[idx] > p.highestScore) p.highestScore = gs.scores[idx];
     if (winnerIndices.includes(idx)) p.wins++;
+    if (!p.history) p.history = [];
+    p.history.unshift({
+      date: gameDate,
+      score: gs.scores[idx],
+      won: winnerIndices.includes(idx),
+      rounds: gs.rounds.length,
+      players: gs.players.join(', ')
+    });
+    if (p.history.length > 20) p.history = p.history.slice(0, 20); // keep last 20
   });
 
   saveStats(stats);
@@ -1799,6 +1994,37 @@ function showStatistics() {
   });
 
   document.getElementById('statsTableEl').innerHTML = html;
+
+  // Build game history — collect all games across all players, deduplicated by date
+  const allGames = [];
+  names.forEach(name => {
+    const p = stats[name];
+    (p.history || []).forEach(g => {
+      let entry = allGames.find(e => e.date === g.date);
+      if (!entry) { entry = { date: g.date, players: g.players, rounds: g.rounds, scores: {} }; allGames.push(entry); }
+      entry.scores[name] = { score: g.score, won: g.won };
+    });
+  });
+  allGames.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  let histHtml = '';
+  allGames.slice(0, 10).forEach(g => {
+    const d = new Date(g.date);
+    const dateStr = d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+    const playerEntries = Object.entries(g.scores)
+      .sort((a, b) => b[1].score - a[1].score)
+      .map(([name, data]) => `<span style="color:${data.won ? 'var(--teal)' : 'var(--text-muted)'};font-weight:${data.won ? '700' : '400'}">${name} ${data.score}</span>`)
+      .join(' · ');
+    histHtml += `
+      <div style="padding:9px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:3px">${dateStr} · ${g.rounds} rounds</div>
+        <div style="font-size:13px;line-height:1.5">${playerEntries}</div>
+      </div>`;
+  });
+
+  const histEl = document.getElementById('gameHistoryContent');
+  if (histEl) histEl.innerHTML = histHtml || '<p style="color:var(--text-muted);font-size:13px">No history yet</p>';
+
   openModal('statsModal');
 }
 
@@ -1885,6 +2111,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Player input update
   document.getElementById('numPlayers').addEventListener('input', updatePlayerInputs);
+
+  // Restore last setup
+  loadSetupMemory();
 
   // Check for saved game
   _savedGame = loadGameState();
