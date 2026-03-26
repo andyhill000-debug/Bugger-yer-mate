@@ -7,7 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BYM Scorer">
-  <meta name="app-version" content="2026.03.26.01">
+  <meta name="app-version" content="2026.03.26.03">
+  <meta name="app-built" content="">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
   <title>Bugger Yer Mate</title>
@@ -603,6 +604,13 @@
     .stepper.bid-confirmed .stepper-val {
       color: var(--teal);
     }
+    .stepper.active-tricks {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px rgba(201,169,97,0.15);
+    }
+    .stepper.active-tricks .stepper-val {
+      color: var(--gold);
+    }
 
     .stepper-pair {
       display: flex;
@@ -844,6 +852,26 @@
 
     @media (min-width: 480px) {
       .score-field input[type="number"] { width: 64px; }
+    }
+
+    /* ── Landscape ── */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .app-header { padding-top: calc(4px + env(safe-area-inset-top)); padding-bottom: 4px; }
+      .header-logo svg { height: 20px; }
+      .game-round-bar { padding: 4px 8px 0; }
+      .card { padding: 8px 10px; }
+      .round-info-grid { gap: 4px; margin-top: 4px; }
+      .info-tile { padding: 5px 4px; }
+      .info-tile .label { font-size: 9px; }
+      .info-tile .value { font-size: 15px; margin-top: 2px; }
+      .round-actions { margin-top: 4px; }
+      .round-action-btn { padding: 4px 10px; font-size: 12px; }
+      .scoring-grid { gap: 4px; }
+      .player-card { padding: 6px 8px; }
+      .player-card-name { font-size: 14px; }
+      .stepper-btn { width: 36px; height: 40px; font-size: 18px; }
+      .stepper-val { font-size: 20px; width: 36px; }
+      .stepper-label { font-size: 9px; }
     }
   </style>
 </head>
@@ -1251,16 +1279,23 @@ document.querySelectorAll('.radio-option').forEach(opt => {
 
 // ═══════════ GAME LOGIC ═══════════
 function startGame() {
-  const numPlayers = parseInt(document.getElementById('numPlayers').value);
-  const startCards = parseInt(document.getElementById('startCards').value);
-  const roundType = document.querySelector('input[name="roundType"]:checked').value;
+  const numPlayersEl = document.getElementById('numPlayers');
+  const startCardsEl = document.getElementById('startCards');
+  const numPlayers = parseInt(numPlayersEl.value);
+  const startCards = parseInt(startCardsEl.value);
+
+  // Inline validation
+  numPlayersEl.style.borderColor = (!numPlayers || numPlayers < 3 || numPlayers > 6) ? 'var(--red)' : '';
+  startCardsEl.style.borderColor = (!startCards || startCards < 1 || startCards > 13) ? 'var(--red)' : '';
 
   if (!numPlayers || numPlayers < 3 || numPlayers > 6) {
-    toast('Enter 3–6 players', 'error'); return;
+    numPlayersEl.focus(); return;
   }
   if (!startCards || startCards < 1 || startCards > 13) {
-    toast('Starting cards must be 1–13', 'error'); return;
+    startCardsEl.focus(); return;
   }
+
+  const roundType = document.querySelector('input[name="roundType"]:checked').value;
 
   gs.players = [];
   for (let i = 0; i < numPlayers; i++) {
@@ -1304,7 +1339,10 @@ function setupRound() {
   document.getElementById('roundLabel').textContent = `Round ${roundNum + 1}`;
   document.getElementById('roundProgress').textContent = `of ${gs.roundStructure.length}`;
   document.getElementById('currentCards').textContent = numCards;
-  document.getElementById('trumpSuit').innerHTML = `<span style="color:${trump.color};font-size:20px">${trump.icon}</span><span style="font-size:15px"> ${trump.name.replace('No Trumps','NT')}</span>`;
+  const trumpDisplay = trump.name === 'No Trumps'
+    ? `<span style="color:${trump.color};font-size:16px;font-weight:700">NT</span>`
+    : `<span style="color:${trump.color};font-size:22px;line-height:1">${trump.icon}</span>`;
+  document.getElementById('trumpSuit').innerHTML = trumpDisplay;
   document.getElementById('dealerName').textContent = gs.players[dealerIdx];
   document.getElementById('totalBids').textContent = '0';
   document.getElementById('totalTricks').textContent = '0';
@@ -1334,6 +1372,7 @@ function setupRound() {
   // State for all stepper values — keyed by playerIdx
   gs.bidVals   = {};
   gs.trickVals = {};
+  gs.confirmedBidders = new Set();
   gs.players.forEach((_, idx) => { gs.bidVals[idx] = 0; gs.trickVals[idx] = 0; });
 
   // Build bidding order (fixed setup order) and tricks order
@@ -1382,7 +1421,7 @@ function setupRound() {
               <div class="stepper-label">Bid</div>
               <div class="stepper locked" id="bidStepper${playerIdx}">
                 <div class="stepper-btn disabled" id="bidMinus${playerIdx}" onclick="stepBid(${playerIdx},-1)">−</div>
-                <div class="stepper-val" id="bidVal${playerIdx}">0</div>
+                <div class="stepper-val" id="bidVal${playerIdx}" onclick="unlockBidForEdit(${playerIdx})" style="cursor:pointer">0</div>
                 <div class="stepper-btn disabled" id="bidPlus${playerIdx}" onclick="stepBid(${playerIdx},+1)">+</div>
               </div>
             </div>
@@ -1430,16 +1469,29 @@ function stepBid(idx, delta) {
   gs.bidVals[idx] = newVal;
   document.getElementById(`bidVal${idx}`).textContent = newVal;
   document.getElementById(`bidMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
-
-  // Mark stepper as confirmed (teal border) once player has interacted
   document.getElementById(`bidStepper${idx}`)?.classList.add('bid-confirmed');
 
-  // First + tap advances to next player
-  if (delta > 0 && oldVal === 0 && idx === gs.currentBidderIdx) {
+  // First + tap on the current active bidder advances to next player
+  if (delta > 0 && !gs.confirmedBidders.has(idx) && idx === gs.currentBidderIdx) {
+    gs.confirmedBidders.add(idx);
     advanceBidder(idx);
   }
 
   updateTotals();
+}
+
+function unlockBidForEdit(idx) {
+  // Allow tapping a previously-confirmed bid stepper to re-edit it
+  if (_bidsLocked) return;
+  const order = gs.biddingOrder;
+  const myPos = order.indexOf(idx);
+  const currentPos = order.indexOf(gs.currentBidderIdx);
+  // Only allow re-editing players who have already bid (before current)
+  if (myPos >= currentPos && gs.currentBidderIdx !== -1) return;
+  haptic('light');
+  // Snap current bidder back to this player so they can adjust
+  gs.currentBidderIdx = idx;
+  activateBidStepper(idx);
 }
 
 function advanceBidder(idx) {
@@ -1462,16 +1514,46 @@ function activateBidStepper(idx) {
 
 function stepTrick(idx, delta) {
   if (!_bidsLocked) return;
+  // Enforce order — only active tricks player or already-entered players
+  const order = gs.tricksOrder;
+  const myPos = order.indexOf(idx);
+  const currentPos = order.indexOf(gs.currentTricksIdx);
+  if (myPos > currentPos) return;
+
   haptic('light');
   const numCards = gs.roundStructure[gs.currentRound];
-  const newVal = Math.max(0, Math.min(numCards, (gs.trickVals[idx] || 0) + delta));
+  const oldVal = gs.trickVals[idx] || 0;
+  const newVal = Math.max(0, Math.min(numCards, oldVal + delta));
   gs.trickVals[idx] = newVal;
   document.getElementById(`wonVal${idx}`).textContent = newVal;
   document.getElementById(`wonMinus${idx}`)?.classList.toggle('disabled', newVal === 0);
 
-  // Auto-complete last player's tricks when all others are set
+  // First + tap on current tricks player advances to next
+  if (delta > 0 && !gs.confirmedTricks.has(idx) && idx === gs.currentTricksIdx) {
+    gs.confirmedTricks.add(idx);
+    advanceTricks(idx);
+  }
+
   autoCompleteTricks();
   updateTotals();
+}
+
+function advanceTricks(idx) {
+  const order = gs.tricksOrder;
+  const pos = order.indexOf(idx);
+  if (pos < order.length - 1) {
+    gs.currentTricksIdx = order[pos + 1];
+    highlightActiveTricksCard(gs.currentTricksIdx);
+  }
+}
+
+function highlightActiveTricksCard(idx) {
+  // Remove highlight from all won steppers, add to active
+  gs.players.forEach((_, i) => {
+    const s = document.getElementById(`wonStepper${i}`);
+    if (s) s.classList.toggle('active-tricks', i === idx);
+  });
+  document.getElementById(`pcard${idx}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function autoCompleteTricks() {
@@ -1560,6 +1642,8 @@ function lockBids() {
 
   _bidsLocked = true;
   haptic('medium');
+  gs.currentTricksIdx = gs.tricksOrder[0];
+  gs.confirmedTricks = new Set();
 
   // Lock bid steppers visually, enable won steppers
   gs.players.forEach((_, idx) => {
@@ -1588,6 +1672,9 @@ function lockBids() {
 
   const actionBtn = document.getElementById('mainActionBtn');
   if (actionBtn) { actionBtn.textContent = '✓ Submit round'; actionBtn.className = 'round-action-btn teal'; }
+
+  // Highlight first tricks player
+  setTimeout(() => highlightActiveTricksCard(gs.currentTricksIdx), 50);
 
   toast('Bids locked! Enter tricks won.', 'success');
 }
@@ -1658,15 +1745,24 @@ function showRoundSummary(roundData, nextRoundNum) {
 
   openModal('roundSummaryModal');
 
-  // Wire up "Next Round" to proceed
+  // Auto-dismiss after 4 seconds
+  const autoDismiss = setTimeout(() => {
+    if (!document.getElementById('roundSummaryModal').classList.contains('hidden')) {
+      proceedToNextRound();
+    }
+  }, 4000);
+
+  // Wire up "Next Round" to proceed immediately
   const btn = document.querySelector('#roundSummaryModal .btn-primary');
-  btn.onclick = () => {
-    closeModal('roundSummaryModal');
-    document.getElementById('scoreboardSection').classList.remove('hidden');
-    updateScoreboard();
-    setupRound();
-    document.querySelector('.game-scroll-area').scrollTop = 0;
-  };
+  btn.onclick = () => { clearTimeout(autoDismiss); proceedToNextRound(); };
+}
+
+function proceedToNextRound() {
+  closeModal('roundSummaryModal');
+  document.getElementById('scoreboardSection').classList.remove('hidden');
+  updateScoreboard();
+  setupRound();
+  document.querySelector('.game-scroll-area').scrollTop = 0;
 }
 
 function undoLastRound() {
@@ -1749,6 +1845,14 @@ function showFinalResults() {
     standCard.appendChild(item);
   });
 
+  // Play Again button
+  const playAgainBtn = document.createElement('button');
+  playAgainBtn.className = 'btn-primary';
+  playAgainBtn.style.marginTop = '12px';
+  playAgainBtn.textContent = '▶ Play Again (same players)';
+  playAgainBtn.onclick = playAgain;
+  standCard.appendChild(playAgainBtn);
+
   const scrollArea = document.querySelector('.game-scroll-area');
   scrollArea.insertBefore(standCard, scrollArea.firstChild);
   scrollArea.scrollTop = 0;
@@ -1768,7 +1872,10 @@ function toggleScoreboard() {
 function updateScoreboard() {
   const table = document.getElementById('scoreboardTable');
   let html = `<tr><th>#</th><th>Cards</th><th>Trump</th><th>Dealer</th>`;
-  gs.players.forEach(p => { html += `<th>${p}</th>`; });
+  gs.players.forEach(p => {
+    const abbr = p.length > 6 ? p.slice(0, 5) + '…' : p;
+    html += `<th title="${p}">${abbr}</th>`;
+  });
   html += `<th></th></tr>`;
 
   gs.rounds.forEach((r, ri) => {
@@ -1927,6 +2034,35 @@ function resetGame() {
   );
 }
 
+function playAgain() {
+  // Keep same players + settings, just restart the round structure
+  const players = [...gs.players];
+  const startCards = gs.roundStructure[0]; // first round = starting cards
+  const isUpDown = gs.roundStructure[gs.roundStructure.length - 1] === startCards;
+
+  clearSavedGame();
+
+  gs.rounds = [];
+  gs.currentRound = 0;
+  gs.scores = Array(players.length).fill(0);
+  gs.dealerIndex = (gs.dealerIndex + 1) % players.length; // rotate starting dealer
+
+  gs.roundStructure = [];
+  for (let i = startCards; i >= 1; i--) gs.roundStructure.push(i);
+  if (isUpDown) for (let i = 2; i <= startCards; i++) gs.roundStructure.push(i);
+
+  document.getElementById('standingsCard')?.remove();
+  document.getElementById('scoreboardSection').classList.add('hidden');
+  document.getElementById('headerUndoBtn').style.display = 'none';
+
+  const mainBtn = document.getElementById('mainActionBtn');
+  if (mainBtn) mainBtn.style.display = '';
+
+  setupRound();
+  document.querySelector('.game-scroll-area').scrollTop = 0;
+  toast('New game — same players!', 'success');
+}
+
 // ═══════════ STATISTICS ═══════════
 function loadStats() {
   try { return JSON.parse(localStorage.getItem('bymStats') || '{}'); } catch(e) { return {}; }
@@ -2076,7 +2212,10 @@ function importStatistics() {
 
 function showVersion() {
   const v = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
-  toast(`v${v}`, 'success', 2000);
+  // Also show cache status
+  const built = document.querySelector('meta[name="app-built"]')?.content || '';
+  const builtStr = built ? ` · built ${built}` : '';
+  toast(`v${v}${builtStr}`, 'success', 3000);
 }
 
 function importStatisticsFromHeader() { importStatistics(); }
@@ -2085,8 +2224,20 @@ function importStatisticsFromHeader() { importStatistics(); }
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
+      .then(reg => {
+        console.log('SW registered:', reg.scope);
+        // Read cache name from SW to show as build stamp
+        if (reg.active) {
+          reg.active.postMessage({ type: 'GET_VERSION' });
+        }
+      })
       .catch(err => console.log('SW registration failed:', err));
+  });
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data?.type === 'VERSION') {
+      const meta = document.querySelector('meta[name="app-built"]');
+      if (meta) meta.content = e.data.version;
+    }
   });
 }
 

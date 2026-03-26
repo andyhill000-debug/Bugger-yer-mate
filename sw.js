@@ -1,8 +1,8 @@
 // Bugger Yer Mate — Service Worker
-// Version: 2026.03.26.01
+// Version: 2026.03.26.03
 // Caches the app shell for full offline use
 
-const CACHE_NAME = 'bym-v2';
+const CACHE_NAME = 'bym-v3';
 const ASSETS = [
   './index.html',
   './manifest.json'
@@ -63,4 +63,11 @@ self.addEventListener('fetch', event => {
       });
     })
   );
+});
+
+// Respond to version requests from the app
+self.addEventListener('message', e => {
+  if (e.data?.type === 'GET_VERSION') {
+    e.source.postMessage({ type: 'VERSION', version: CACHE_NAME });
+  }
 });
