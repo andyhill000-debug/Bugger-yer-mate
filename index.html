@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BYM Scorer">
-  <meta name="app-version" content="2026.02.27.01">
+  <meta name="app-version" content="2026.03.26.01">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
   <title>Bugger Yer Mate</title>
@@ -855,7 +855,7 @@
 <!-- ── HEADER ── -->
 <header class="app-header">
   <div class="header-inner">
-    <div class="header-logo">
+    <div class="header-logo" onclick="showVersion()" style="cursor:pointer;-webkit-tap-highlight-color:transparent">
       <svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(50, 60)">
           <g transform="rotate(45 28 28)">
@@ -2072,6 +2072,11 @@ function importStatistics() {
     reader.readAsText(file);
   };
   input.click();
+}
+
+function showVersion() {
+  const v = document.querySelector('meta[name="app-version"]')?.content || 'unknown';
+  toast(`v${v}`, 'success', 2000);
 }
 
 function importStatisticsFromHeader() { importStatistics(); }

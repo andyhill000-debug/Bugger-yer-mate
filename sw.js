@@ -1,4 +1,5 @@
 // Bugger Yer Mate — Service Worker
+// Version: 2026.03.26.01
 // Caches the app shell for full offline use
 
 const CACHE_NAME = 'bym-v2';
