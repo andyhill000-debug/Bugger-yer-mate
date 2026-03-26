@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="BYM Scorer">
-  <meta name="app-version" content="2026.03.26.03">
+  <meta name="app-version" content="2026.03.26.04">
   <meta name="app-built" content="">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.svg">
@@ -26,32 +26,28 @@
       font-family: 'DM Sans';
       font-style: normal;
       font-weight: 400;
-      src: local('DM Sans'), local('DMSans-Regular'),
-           local('-apple-system'), local('BlinkMacSystemFont');
+      src: local('DM Sans'), local('DMSans-Regular'), local('Arial');
       font-display: swap;
     }
     @font-face {
       font-family: 'DM Sans';
       font-style: normal;
       font-weight: 500;
-      src: local('DM Sans Medium'), local('DMSans-Medium'),
-           local('-apple-system'), local('BlinkMacSystemFont');
+      src: local('DM Sans Medium'), local('DMSans-Medium'), local('Arial');
       font-display: swap;
     }
     @font-face {
       font-family: 'DM Sans';
       font-style: normal;
       font-weight: 600;
-      src: local('DM Sans SemiBold'), local('DMSans-SemiBold'),
-           local('-apple-system'), local('BlinkMacSystemFont');
+      src: local('DM Sans SemiBold'), local('DMSans-SemiBold'), local('Arial');
       font-display: swap;
     }
     @font-face {
       font-family: 'DM Sans';
       font-style: normal;
       font-weight: 700;
-      src: local('DM Sans Bold'), local('DMSans-Bold'),
-           local('-apple-system'), local('BlinkMacSystemFont');
+      src: local('DM Sans Bold'), local('DMSans-Bold'), local('Arial');
       font-display: swap;
     }
     :root {
@@ -73,7 +69,7 @@
     html { height: 100%; height: 100dvh; }
 
     body {
-      font-family: 'DM Sans', -apple-system, sans-serif;
+      font-family: 'DM Sans', Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
       height: 100%;
@@ -887,15 +883,15 @@
       <svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(50, 60)">
           <g transform="rotate(45 28 28)">
-            <rect x="0" y="0" width="16" height="16" fill="#ffffff" rx="1"/>
-            <rect x="20" y="0" width="16" height="16" fill="#00d4aa" rx="1"/>
-            <rect x="40" y="0" width="16" height="16" fill="#ffffff" rx="1"/>
-            <rect x="0" y="20" width="16" height="16" fill="#ffffff" rx="1"/>
+            <rect x="0"  y="0"  width="16" height="16" fill="#ffffff" rx="1"/>
+            <rect x="20" y="0"  width="16" height="16" fill="#00d4aa" rx="1"/>
+            <rect x="40" y="0"  width="16" height="16" fill="#ffffff" rx="1"/>
+            <rect x="0"  y="20" width="16" height="16" fill="#ffffff" rx="1"/>
             <rect x="20" y="20" width="16" height="16" fill="#ffffff" rx="1"/>
             <rect x="40" y="20" width="16" height="16" fill="#ffffff" rx="1"/>
-            <rect x="0" y="40" width="16" height="16" fill="#ffffff" rx="1"/>
+            <rect x="0"  y="40" width="16" height="16" fill="#ffffff" rx="1"/>
             <rect x="20" y="40" width="16" height="16" fill="#ffffff" rx="1"/>
-            <rect x="40" y="40" width="16" height="16" fill="#00d4aa" rx="1"/>
+            <rect x="40" y="40" width="16" height="16" fill="#c9a961" rx="1"/>
           </g>
         </g>
         <text x="130" y="70" font-family="Playfair Display, Georgia, serif" font-size="48" font-weight="700" fill="#ffffff" letter-spacing="-0.3">Hillfred</text>
@@ -2221,15 +2217,12 @@ function showVersion() {
 function importStatisticsFromHeader() { importStatistics(); }
 
 // ═══════════ SERVICE WORKER ═══════════
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && location.hostname !== 'www.claudeusercontent.com') {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => {
         console.log('SW registered:', reg.scope);
-        // Read cache name from SW to show as build stamp
-        if (reg.active) {
-          reg.active.postMessage({ type: 'GET_VERSION' });
-        }
+        if (reg.active) reg.active.postMessage({ type: 'GET_VERSION' });
       })
       .catch(err => console.log('SW registration failed:', err));
   });
