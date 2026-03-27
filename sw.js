@@ -1,62 +1,69 @@
 // Bugger Yer Mate — Service Worker
-// Version: 2026.03.26.04
-// Caches the app shell for full offline use
+// Version: 2026.03.26.05
 
-const CACHE_NAME = 'bym-v4';
+const CACHE_NAME = 'bym-v5';
+
 const ASSETS = [
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon-32.png',
+  './icon-76.png',
+  './icon-120.png',
+  './icon-152.png',
+  './icon-180.png',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-// Install: cache all assets
+// Install: cache all assets one by one so a single failure doesn't abort
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(async cache => {
+      for (const asset of ASSETS) {
+        try {
+          await cache.add(asset);
+        } catch (e) {
+          console.warn('SW: failed to cache', asset, e);
+        }
+      }
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate: delete old caches
+// Activate: delete old caches, take control immediately
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch: cache-first for our assets, network-first for fonts
+// Fetch: cache-first for same-origin assets, network-only for everything else
 self.addEventListener('fetch', event => {
+  // Only handle GET requests
+  if (event.request.method !== 'GET') return;
+
   const url = new URL(event.request.url);
 
-  // Always try network first for Google Fonts (graceful degradation if offline)
-  if (url.hostname.includes('googleapis.com') || url.hostname.includes('gstatic.com')) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache =>
-        fetch(event.request)
-          .then(response => {
-            cache.put(event.request, response.clone());
-            return response;
-          })
-          .catch(() => cache.match(event.request))
-      )
-    );
-    return;
-  }
+  // Only intercept same-origin requests
+  if (url.origin !== self.location.origin) return;
 
-  // Cache-first for everything else (our app shell)
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
+
+      // Not in cache — fetch from network and cache it
       return fetch(event.request).then(response => {
-        // Cache any successful same-origin responses
-        if (response.ok && url.origin === self.location.origin) {
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
       }).catch(() => {
-        // Offline fallback — serve index.html for navigation requests
+        // Offline fallback for navigation requests
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
@@ -65,9 +72,9 @@ self.addEventListener('fetch', event => {
   );
 });
 
-// Respond to version requests from the app
-self.addEventListener('message', e => {
-  if (e.data?.type === 'GET_VERSION') {
-    e.source.postMessage({ type: 'VERSION', version: CACHE_NAME });
+// Respond to version requests from the page
+self.addEventListener('message', event => {
+  if (event.data?.type === 'GET_VERSION') {
+    event.source.postMessage({ type: 'VERSION', version: CACHE_NAME });
   }
 });
