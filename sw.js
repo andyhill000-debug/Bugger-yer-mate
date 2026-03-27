@@ -1,18 +1,18 @@
 // Bugger Yer Mate — Service Worker
-// Version: 2026.03.26.05
+// Version: 2026.03.26.06
 
-const CACHE_NAME = 'bym-v5';
+const CACHE_NAME = 'bym-v6';
 
 const ASSETS = [
   './index.html',
   './manifest.json',
-  './icon-32.png',
-  './icon-76.png',
-  './icon-120.png',
-  './icon-152.png',
-  './icon-180.png',
-  './icon-192.png',
-  './icon-512.png'
+  './icons/icon-32.png',
+  './icons/icon-76.png',
+  './icons/icon-120.png',
+  './icons/icon-152.png',
+  './icons/icon-180.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 // Install: cache all assets one by one so a single failure doesn't abort
