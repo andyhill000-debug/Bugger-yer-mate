@@ -1,7 +1,7 @@
 // Bugger Yer Mate — Service Worker
-// Version: 2026.03.26.09
+// Version: 2026.03.26.10
 
-const CACHE_NAME = 'bym-v9';
+const CACHE_NAME = 'bym-v10';
 
 const ASSETS = [
   './index.html',
@@ -29,13 +29,18 @@ self.addEventListener('install', event => {
   );
 });
 
+// Activate: delete ALL previous caches unconditionally
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(keys.map(k => {
+        console.log('SW: deleting cache', k);
+        return caches.delete(k);
+      }))
+    ).then(() => {
+      caches.open(CACHE_NAME);
+      self.clients.claim();
+    })
   );
 });
 
