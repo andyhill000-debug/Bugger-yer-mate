@@ -1,7 +1,7 @@
 // Bugger Yer Mate — Service Worker
-// Version: 2026.03.26.06
+// Version: 2026.03.26.07
 
-const CACHE_NAME = 'bym-v6';
+const CACHE_NAME = 'bym-v7';
 
 const ASSETS = [
   './index.html',
